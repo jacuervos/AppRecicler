@@ -5,17 +5,21 @@
  * @format
  */
 
-
-import * as React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React, {Fragment} from 'react';
 import Navigation from './src/navigations/Navigation';
+import {StatusBar, SafeAreaView} from 'react-native';
+import {colors} from './src/utils/constants';
 
-const Stack = createNativeStackNavigator();
-
-function App() {
+const App = () => {
   return (
-    <Navigation/>
+    <Fragment>
+      <SafeAreaView style={{flex: 0, backgroundColor: colors.primary}} />
+      <SafeAreaView style={{flex: 1}}>
+        <StatusBar animated={true} backgroundColor="#51B055" />
+        <Navigation />
+      </SafeAreaView>
+    </Fragment>
   );
-}
+};
 
 export default App;

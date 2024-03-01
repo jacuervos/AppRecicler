@@ -66,3 +66,4 @@ yarn-error.log
 /coverage
 ios/Podfile.lock
 package-lock.json
+package-lock.json

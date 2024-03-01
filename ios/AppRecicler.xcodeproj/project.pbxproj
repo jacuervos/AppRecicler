@@ -8,6 +8,22 @@
 
 /* Begin PBXBuildFile section */
 		00E356F31AD99517003FC87E /* AppReciclerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 00E356F21AD99517003FC87E /* AppReciclerTests.m */; };
+		02A5971F2B8D3F15005F8956 /* Nunito-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A597102B8D3F14005F8956 /* Nunito-Regular.otf */; };
+		02A597202B8D3F15005F8956 /* Nunito-ExtraLightItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A597112B8D3F14005F8956 /* Nunito-ExtraLightItalic.otf */; };
+		02A597212B8D3F15005F8956 /* Nunito-Light.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A597122B8D3F14005F8956 /* Nunito-Light.otf */; };
+		02A597222B8D3F15005F8956 /* Nunito-SemiBoldItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A597132B8D3F14005F8956 /* Nunito-SemiBoldItalic.otf */; };
+		02A597232B8D3F15005F8956 /* Nunito-Italic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A597142B8D3F14005F8956 /* Nunito-Italic.otf */; };
+		02A597242B8D3F15005F8956 /* Nunito-ExtraBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A597152B8D3F14005F8956 /* Nunito-ExtraBold.otf */; };
+		02A597252B8D3F15005F8956 /* Nunito-ExtraBoldItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A597162B8D3F14005F8956 /* Nunito-ExtraBoldItalic.otf */; };
+		02A597262B8D3F15005F8956 /* Nunito-MediumItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A597172B8D3F14005F8956 /* Nunito-MediumItalic.otf */; };
+		02A597272B8D3F15005F8956 /* Nunito-Black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A597182B8D3F14005F8956 /* Nunito-Black.otf */; };
+		02A597282B8D3F15005F8956 /* Nunito-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A597192B8D3F14005F8956 /* Nunito-Medium.otf */; };
+		02A597292B8D3F15005F8956 /* Nunito-LightItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A5971A2B8D3F14005F8956 /* Nunito-LightItalic.otf */; };
+		02A5972A2B8D3F15005F8956 /* Nunito-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A5971B2B8D3F14005F8956 /* Nunito-Bold.otf */; };
+		02A5972B2B8D3F15005F8956 /* Nunito-SemiBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A5971C2B8D3F15005F8956 /* Nunito-SemiBold.otf */; };
+		02A5972C2B8D3F15005F8956 /* Nunito-BlackItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A5971D2B8D3F15005F8956 /* Nunito-BlackItalic.otf */; };
+		02A5972D2B8D3F15005F8956 /* Nunito-BoldItalic.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A5971E2B8D3F15005F8956 /* Nunito-BoldItalic.otf */; };
+		02A5972F2B8D3F22005F8956 /* Nunito-ExtraLight.otf in Resources */ = {isa = PBXBuildFile; fileRef = 02A5972E2B8D3F22005F8956 /* Nunito-ExtraLight.otf */; };
 		0C80B921A6F3F58F76C31292 /* libPods-AppRecicler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-AppRecicler.a */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
@@ -49,6 +65,22 @@
 		02A5970D2B844023005F8956 /* Ionicons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = Ionicons.ttf; path = ../../../../Fonts/Ionicons.ttf; sourceTree = "<group>"; };
 		02A5970E2B844023005F8956 /* MaterialIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = MaterialIcons.ttf; path = ../../../../Fonts/MaterialIcons.ttf; sourceTree = "<group>"; };
 		02A5970F2B844023005F8956 /* EvilIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = EvilIcons.ttf; path = ../../../../Fonts/EvilIcons.ttf; sourceTree = "<group>"; };
+		02A597102B8D3F14005F8956 /* Nunito-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-Regular.otf"; sourceTree = "<group>"; };
+		02A597112B8D3F14005F8956 /* Nunito-ExtraLightItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-ExtraLightItalic.otf"; sourceTree = "<group>"; };
+		02A597122B8D3F14005F8956 /* Nunito-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-Light.otf"; sourceTree = "<group>"; };
+		02A597132B8D3F14005F8956 /* Nunito-SemiBoldItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-SemiBoldItalic.otf"; sourceTree = "<group>"; };
+		02A597142B8D3F14005F8956 /* Nunito-Italic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-Italic.otf"; sourceTree = "<group>"; };
+		02A597152B8D3F14005F8956 /* Nunito-ExtraBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-ExtraBold.otf"; sourceTree = "<group>"; };
+		02A597162B8D3F14005F8956 /* Nunito-ExtraBoldItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-ExtraBoldItalic.otf"; sourceTree = "<group>"; };
+		02A597172B8D3F14005F8956 /* Nunito-MediumItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-MediumItalic.otf"; sourceTree = "<group>"; };
+		02A597182B8D3F14005F8956 /* Nunito-Black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-Black.otf"; sourceTree = "<group>"; };
+		02A597192B8D3F14005F8956 /* Nunito-Medium.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-Medium.otf"; sourceTree = "<group>"; };
+		02A5971A2B8D3F14005F8956 /* Nunito-LightItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-LightItalic.otf"; sourceTree = "<group>"; };
+		02A5971B2B8D3F14005F8956 /* Nunito-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-Bold.otf"; sourceTree = "<group>"; };
+		02A5971C2B8D3F15005F8956 /* Nunito-SemiBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-SemiBold.otf"; sourceTree = "<group>"; };
+		02A5971D2B8D3F15005F8956 /* Nunito-BlackItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-BlackItalic.otf"; sourceTree = "<group>"; };
+		02A5971E2B8D3F15005F8956 /* Nunito-BoldItalic.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-BoldItalic.otf"; sourceTree = "<group>"; };
+		02A5972E2B8D3F22005F8956 /* Nunito-ExtraLight.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-ExtraLight.otf"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* AppRecicler.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppRecicler.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = AppRecicler/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = AppRecicler/AppDelegate.mm; sourceTree = "<group>"; };
@@ -124,6 +156,22 @@
 				02A597042B844023005F8956 /* Octicons.ttf */,
 				02A597082B844023005F8956 /* SimpleLineIcons.ttf */,
 				02A597012B844023005F8956 /* Zocial.ttf */,
+				02A597182B8D3F14005F8956 /* Nunito-Black.otf */,
+				02A5972E2B8D3F22005F8956 /* Nunito-ExtraLight.otf */,
+				02A5971D2B8D3F15005F8956 /* Nunito-BlackItalic.otf */,
+				02A5971B2B8D3F14005F8956 /* Nunito-Bold.otf */,
+				02A5971E2B8D3F15005F8956 /* Nunito-BoldItalic.otf */,
+				02A597152B8D3F14005F8956 /* Nunito-ExtraBold.otf */,
+				02A597162B8D3F14005F8956 /* Nunito-ExtraBoldItalic.otf */,
+				02A597112B8D3F14005F8956 /* Nunito-ExtraLightItalic.otf */,
+				02A597142B8D3F14005F8956 /* Nunito-Italic.otf */,
+				02A597122B8D3F14005F8956 /* Nunito-Light.otf */,
+				02A5971A2B8D3F14005F8956 /* Nunito-LightItalic.otf */,
+				02A597192B8D3F14005F8956 /* Nunito-Medium.otf */,
+				02A597172B8D3F14005F8956 /* Nunito-MediumItalic.otf */,
+				02A597102B8D3F14005F8956 /* Nunito-Regular.otf */,
+				02A5971C2B8D3F15005F8956 /* Nunito-SemiBold.otf */,
+				02A597132B8D3F14005F8956 /* Nunito-SemiBoldItalic.otf */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -288,7 +336,23 @@
 			buildActionMask = 2147483647;
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
+				02A597212B8D3F15005F8956 /* Nunito-Light.otf in Resources */,
+				02A597242B8D3F15005F8956 /* Nunito-ExtraBold.otf in Resources */,
+				02A597262B8D3F15005F8956 /* Nunito-MediumItalic.otf in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				02A597252B8D3F15005F8956 /* Nunito-ExtraBoldItalic.otf in Resources */,
+				02A597232B8D3F15005F8956 /* Nunito-Italic.otf in Resources */,
+				02A597292B8D3F15005F8956 /* Nunito-LightItalic.otf in Resources */,
+				02A597222B8D3F15005F8956 /* Nunito-SemiBoldItalic.otf in Resources */,
+				02A5972B2B8D3F15005F8956 /* Nunito-SemiBold.otf in Resources */,
+				02A5972D2B8D3F15005F8956 /* Nunito-BoldItalic.otf in Resources */,
+				02A5972C2B8D3F15005F8956 /* Nunito-BlackItalic.otf in Resources */,
+				02A5972F2B8D3F22005F8956 /* Nunito-ExtraLight.otf in Resources */,
+				02A5972A2B8D3F15005F8956 /* Nunito-Bold.otf in Resources */,
+				02A597202B8D3F15005F8956 /* Nunito-ExtraLightItalic.otf in Resources */,
+				02A597272B8D3F15005F8956 /* Nunito-Black.otf in Resources */,
+				02A5971F2B8D3F15005F8956 /* Nunito-Regular.otf in Resources */,
+				02A597282B8D3F15005F8956 /* Nunito-Medium.otf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -626,10 +690,7 @@
 					"-DFOLLY_USE_LIBCPP=1",
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
@@ -697,10 +758,7 @@
 					"-DFOLLY_USE_LIBCPP=1",
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
