@@ -17,7 +17,8 @@ prepare_react_native_project!
 #   dependencies: {
 #     ...(process.env.NO_FLIPPER ? { 'react-native-flipper': { platforms: { ios: null } } } : {}),
 # ```
-flipper_config = ENV['NO_FLIPPER'] == "1" ? FlipperConfiguration.disabled : FlipperConfiguration.enabled
+# Flipper disabled to avoid compatibility issues
+flipper_config = FlipperConfiguration.disabled
 
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
@@ -30,6 +31,9 @@ pod 'react-native-google-maps', :path => rn_maps_path
 
 target 'AppRecicler' do
   config = use_native_modules!
+
+  # Add react-native-config
+  pod 'react-native-config', :path => '../node_modules/react-native-config'
 
   use_react_native!(
     :path => config[:reactNativePath],

@@ -8,7 +8,7 @@ import {View, Text} from 'react-native';
 
 const Tab = createBottomTabNavigator();
 
-const TabComponent = ({route}) => {
+const TabComponent = ({}) => {
   return (
     <Tab.Navigator
       screenOptions={({route}) => ({

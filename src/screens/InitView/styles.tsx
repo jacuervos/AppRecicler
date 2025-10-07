@@ -37,9 +37,9 @@ const InitViewStyles = StyleSheet.create({
     fontFamily: fontFamily.fontFamilyBold
   },
   secondTitle:{
-   color:colors.black,
-   fontSize:25,
-   fontFamily: fontFamily.fontFamilyBold
+    color:colors.black,
+    fontSize:25,
+    fontFamily: fontFamily.fontFamilyBold
   },
   textInput: {
     width: '90%',
@@ -51,11 +51,34 @@ const InitViewStyles = StyleSheet.create({
   containerButton: {
     marginTop: '15%',
     alignSelf: 'center',
+    alignItems:'center'
   },
   gradientStyles: {
     height: '40%',
     justifyContent: 'flex-end',
     alignItems: 'center',
+  },
+  textHelp:{
+    fontFamily:fontFamily.fontFamilyRegular,
+    textDecorationLine: 'underline',
+    marginTop: 10,
+    fontSize:15 
+  },
+  errorContainer: {
+    backgroundColor: '#fee',
+    borderColor: '#fcc',
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    margin: 15,
+    alignSelf: 'center',
+    width: '90%',
+  },
+  errorText: {
+    color: '#c00',
+    fontSize: 14,
+    fontFamily: fontFamily.fontFamilyRegular,
+    textAlign: 'center',
   },
 });
 

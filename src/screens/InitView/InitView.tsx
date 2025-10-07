@@ -1,5 +1,5 @@
 import React from 'react';
-import {Text, View, Image} from 'react-native';
+import {Text, View, Image, TouchableOpacity, Alert} from 'react-native';
 import {PrincipalTextInput} from '../../components/textInput/PrincipalTextInput.tsx';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
@@ -8,10 +8,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import InitViewStyles from './styles.tsx';
 import {colors} from '../../utils/constants.tsx';
 import {PrimaryButton} from '../../components/buttons/PrimaryButton.tsx';
-import {
-  ValidatePhone,
-  ValidateDocument,
-} from '../../functions/ErrorHandling.tsx';
+import {useAuth} from '../../hooks/useAuth';
 import LinearGradient from 'react-native-linear-gradient';
 
 type RootStackParamList = {
@@ -21,10 +18,31 @@ type RootStackParamList = {
 const InitView = ({}) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  
+  const { login, isLoading, error, clearError } = useAuth();
+
   const creteSchema = Yup.object().shape({
-    phone: ValidatePhone(),
-    document: ValidateDocument(),
+    email: Yup.string()
+      .email('Ingresa un email válido')
+      .required('El email es requerido'),
+    password: Yup.string()
+      .min(6, 'La contraseña debe tener al menos 6 caracteres')
+      .required('La contraseña es requerida'),
   });
+
+  const handleLogin = async (values: {email: string; password: string}) => {
+    try {
+      clearError(); // Limpiar errores previos
+      await login(values);
+      // Si el login es exitoso, navegar a la pantalla principal
+      navigation.navigate('Tab');
+    } catch (error) {
+      Alert.alert(
+        'Error de autenticación', 
+        error instanceof Error ? error.message : 'Error al iniciar sesión'
+      );
+    }
+  };
 
   return (
     <View style={InitViewStyles.container}>
@@ -45,40 +63,49 @@ const InitView = ({}) => {
         </View>
       </LinearGradient>
       <Formik
-        initialValues={{phone: '', document: ''}}
+        initialValues={{email: '', password: ''}}
         validationSchema={creteSchema}
-        onSubmit={values => console.log(values)}>
+        onSubmit={handleLogin}>
         {({errors, touched, handleSubmit, values, setFieldValue}) => (
           <View>
+            {error && (
+              <View style={InitViewStyles.errorContainer}>
+                <Text style={InitViewStyles.errorText}>{error}</Text>
+              </View>
+            )}
             <PrincipalTextInput
-              value={values.phone}
-              valueChange={'phone'}
+              value={values.email}
+              valueChange={'email'}
               change={setFieldValue}
               style={InitViewStyles.textInput}
-              label={'Teléfono'}
+              label={'Correo electrónico'}
               mode={'flat'}
-              keyboard={'numeric'}
-              error={!!errors?.phone && touched?.phone}
+              keyboard={'email-address'}
+              error={!!errors?.email && touched?.email}
             />
             <PrincipalTextInput
-              value={values.document}
-              valueChange={'document'}
+              value={values.password}
+              valueChange={'password'}
               change={setFieldValue}
               style={InitViewStyles.textInput}
-              label={'Documento'}
+              label={'Contraseña'}
               mode={'flat'}
-              keyboard={'numeric'}
+              keyboard={'default'}
+              security={true}
               error={!!errors?.password && touched?.password}
             />
             <View style={InitViewStyles.containerButton}>
               <PrimaryButton
-                text={'Iniciar sesión'}
+                text={isLoading ? 'Iniciando...' : 'Iniciar sesión'}
                 width={150}
                 height={50}
                 backgroundColor={colors.primary}
-                disabled={false}
-                action={() => navigation.navigate('Tab')}
+                disabled={isLoading}
+                action={() => handleSubmit()}
               />
+              <TouchableOpacity>
+                <Text style={InitViewStyles.textHelp}>Necesitas Ayuda?</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}

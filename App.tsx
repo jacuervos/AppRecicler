@@ -7,7 +7,7 @@
 
 import React, {Fragment} from 'react';
 import Navigation from './src/navigations/Navigation';
-import {StatusBar, SafeAreaView} from 'react-native';
+import {StatusBar, SafeAreaView, View, ActivityIndicator, Text} from 'react-native';
 import {colors} from './src/utils/constants';
 
 const App = () => {
