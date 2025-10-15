@@ -13,13 +13,14 @@ import LinearGradient from 'react-native-linear-gradient';
 
 type RootStackParamList = {
   Tab: undefined;
+  Register: undefined;
 };
 
 const InitView = ({}) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  
-  const { login, isLoading, error, clearError } = useAuth();
+
+  const {login, isLoading, error, clearError} = useAuth();
 
   const creteSchema = Yup.object().shape({
     email: Yup.string()
@@ -36,10 +37,10 @@ const InitView = ({}) => {
       await login(values);
       // Si el login es exitoso, navegar a la pantalla principal
       navigation.navigate('Tab');
-    } catch (error) {
+    } catch (err) {
       Alert.alert(
-        'Error de autenticación', 
-        error instanceof Error ? error.message : 'Error al iniciar sesión'
+        'Error de autenticación',
+        err instanceof Error ? err?.message : 'Error al iniciar sesión',
       );
     }
   };
@@ -105,6 +106,9 @@ const InitView = ({}) => {
               />
               <TouchableOpacity>
                 <Text style={InitViewStyles.textHelp}>Necesitas Ayuda?</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                <Text style={InitViewStyles.textHelp}>Registrarse</Text>
               </TouchableOpacity>
             </View>
           </View>
