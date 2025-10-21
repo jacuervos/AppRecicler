@@ -1,21 +1,13 @@
 import axios, {AxiosInstance, AxiosResponse} from 'axios';
-import Config from 'react-native-config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  LoginCredentials,
-  LoginResponse,
-  UserInfoResponse,
-} from '../types/auth.types';
-import {TypeIdentificationResponse} from "../types/typeIdentification.types.ts";
+import {TypeIdentificationResponse} from '../types/typeIdentification.types';
 
 class TypeIdentificationApiService {
   private api: AxiosInstance;
   private baseURL: string;
 
   constructor() {
-    this.baseURL =
-      Config.AUTH_API_URL ||
-      'https://ms-auth-eha5d8bchthmdtd7.centralus-01.azurewebsites.net/api';
+    this.baseURL = 'https://ms-auth-eha5d8bchthmdtd7.centralus-01.azurewebsites.net/api';
 
     this.api = axios.create({
       baseURL: this.baseURL,
