@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   Text,
   View,
@@ -13,17 +13,22 @@ import {
 } from 'react-native';
 import * as Yup from 'yup';
 import {Formik} from 'formik';
+import {BottomSheetModal} from '@gorhom/bottom-sheet';
 import {useNavigation} from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {ChangeImage} from '../../components/modals/ChangeImage';
 import {PrimaryButton} from '../../components/buttons/PrimaryButton';
 import {PrincipalTextInput} from '../../components/textInput/PrincipalTextInput';
 import {PrincipalInputSelect} from '../../components/inputSelect/PrincipalInputSelect';
 import useTypeIdentificationStore from '../../store/typeIdentificationStore';
 import {useAuth} from '../../hooks/useAuth';
 import {colors} from '../../utils/constants';
+import {openCamera, openGallery} from '../../functions/Camera';
 import RegisterStyles from './styles';
+import {openDocument} from "../../functions/Document.ts";
+
 type RootStackParamList = {};
 
 const Register = ({}) => {
@@ -52,9 +57,52 @@ const Register = ({}) => {
     ),
   });
 
-  const handleRegister = () => {
-    console.log('');
-    clearError();
+  const [imageProfile, setImageProfile] = useState('');
+  const [documentIdentity, setDocumentIdentity] = useState({name: '', url: ''});
+  const [documentLicense, setDocumentLicense] = useState({name: '', url: ''});
+  const [errorDocuments, setErrorDocuments] = useState({
+    image: false,
+    identity: false,
+    license: false,
+  });
+
+  const sheetRef = useRef<BottomSheetModal>(null);
+
+  const handleRegister = (values: any) => {
+    if(!errorDocuments.image && !errorDocuments.identity && !errorDocuments.license){
+      console.log(values, 'values register');
+      clearError();
+    }
+  };
+
+  const openModal = () => {
+    sheetRef?.current?.present();
+  };
+
+  const handleTakeImage = async (image: 'photo' | 'gallery') => {
+    if(image === 'photo'){
+      const photo = await openCamera();
+      setImageProfile(photo?.url ?? '');
+    }else {
+      const photo = await openGallery();
+      setImageProfile(photo?.url ?? '');
+    }
+    sheetRef?.current?.dismiss();
+  };
+
+  const handleUploadDocument = async (type: 'identity' | 'license') => {
+    const document = await openDocument();
+    if(type === 'identity'){
+      setDocumentIdentity({
+        name: document?.name ?? 'Documento de Identidad',
+        url: document?.url ?? '',
+      });
+    }else{
+      setDocumentLicense({
+        name: document?.name ?? 'Licencia de Conducción',
+        url: document?.url ?? '',
+      });
+    }
   };
 
   const getType = useCallback(async () => {
@@ -91,17 +139,22 @@ const Register = ({}) => {
               colors={[colors.primary, colors.white]}>
               <View style={RegisterStyles.containerImage}>
                 <Image
-                  source={require('../../../assets/images/login.png')}
+                  source={imageProfile ? {uri: imageProfile} : require('../../../assets/images/login.png')}
                   style={RegisterStyles.image}
                 />
               </View>
-              <Pressable style={RegisterStyles.containerCamera}>
+              <Pressable
+                  onPress={openModal}
+                  style={RegisterStyles.containerCamera}>
                 <MaterialIcons
                   name={'camera-alt'}
                   color={colors.black}
                   size={12}
                 />
               </Pressable>
+              {errorDocuments.identity && (
+                  <Text style={RegisterStyles.errorText}>Imagen obligatorio</Text>
+              )}
               <View style={RegisterStyles.containerTitle}>
                 <Text style={RegisterStyles.firstTitle}>Recycler</Text>
                 <Text style={RegisterStyles.secondTitle}>App</Text>
@@ -203,6 +256,26 @@ const Register = ({}) => {
                       touched?.password_confirmation
                     }
                   />
+                  <Pressable style={RegisterStyles.containerDocument}
+                    onPress={() => handleUploadDocument('identity')}
+                  >
+                    <Text style={RegisterStyles.textDocument}>{
+                      documentIdentity.name !== '' ? documentIdentity.name : 'Subir Documento de Identidad...'
+                    }</Text>
+                  </Pressable>
+                  {errorDocuments.identity && (
+                      <Text style={RegisterStyles.errorTextDocument}>Documento obligatorio</Text>
+                  )}
+                  <Pressable style={RegisterStyles.containerDocument}
+                             onPress={() => handleUploadDocument('license')}
+                  >
+                    <Text style={RegisterStyles.textDocument}>{
+                      documentLicense.name !== '' ? documentLicense.name : 'Subir Licencia de Conducción...'
+                    }</Text>
+                  </Pressable>
+                  {errorDocuments.license && (
+                      <Text style={RegisterStyles.errorTextDocument}>Documento obligatorio</Text>
+                  )}
                   <View style={RegisterStyles.containerButton}>
                     <PrimaryButton
                       text={isLoading ? 'Iniciando...' : 'Registrarse'}
@@ -210,7 +283,15 @@ const Register = ({}) => {
                       height={50}
                       backgroundColor={colors.primary}
                       disabled={isLoading}
-                      action={() => handleSubmit()}
+                      action={() => {
+                        const newErrors = {
+                          license: documentLicense.url === '',
+                          identity: documentIdentity.url === '',
+                          image: imageProfile === '',
+                        };
+                        setErrorDocuments(prev => ({ ...prev, ...newErrors }));
+                        handleSubmit();
+                      }}
                     />
                     <TouchableOpacity onPress={() => navigation.goBack()}>
                       <Text style={RegisterStyles.textHelp}>
@@ -224,6 +305,7 @@ const Register = ({}) => {
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
+      <ChangeImage sheetRef={sheetRef} handleTakeImage={handleTakeImage} />
     </KeyboardAvoidingView>
   );
 };

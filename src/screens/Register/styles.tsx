@@ -51,6 +51,7 @@ const RegisterStyles = StyleSheet.create({
   image: {
     width: 80,
     height: 80,
+    borderRadius: 40,
   },
   containerTitle: {
     flexDirection: 'row',
@@ -86,6 +87,14 @@ const RegisterStyles = StyleSheet.create({
     alignSelf: 'center',
     alignItems: 'center',
   },
+  containerDocument: {
+    alignSelf: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    marginTop: 25,
+    padding: 10,
+    width: '90%',
+  },
   gradientStyles: {
     height: '25%',
     justifyContent: 'flex-end',
@@ -95,7 +104,7 @@ const RegisterStyles = StyleSheet.create({
     fontFamily: fontFamily.fontFamilyRegular,
     textDecorationLine: 'underline',
     marginTop: 10,
-    marginBottom: 80,
+    marginBottom: 150,
     fontSize: 15,
   },
   errorContainer: {
@@ -109,10 +118,22 @@ const RegisterStyles = StyleSheet.create({
     width: '90%',
   },
   errorText: {
-    color: '#c00',
+    color: colors.error,
     fontSize: 14,
     fontFamily: fontFamily.fontFamilyRegular,
     textAlign: 'center',
+  },
+  errorTextDocument: {
+    color: colors.error,
+    fontSize: 14,
+    fontFamily: fontFamily.fontFamilyRegular,
+    marginLeft: 20,
+    marginTop: 5,
+  },
+  textDocument: {
+    color: colors.white,
+    fontSize: 14,
+    fontFamily: fontFamily.fontFamilyRegular,
   },
 });
 
