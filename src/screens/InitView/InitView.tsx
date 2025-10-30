@@ -1,5 +1,5 @@
-import React from 'react';
-import {Text, View, Image, TouchableOpacity, Alert} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {Text, View, Image, TouchableOpacity, Alert, ActivityIndicator} from 'react-native';
 import {PrincipalTextInput} from '../../components/textInput/PrincipalTextInput.tsx';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
@@ -19,8 +19,25 @@ type RootStackParamList = {
 const InitView = ({}) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  
+  const { login, isLoading, error, clearError, isAuthenticated } = useAuth();
+  const [isInitializing, setIsInitializing] = useState(true);
 
-  const {login, isLoading, error, clearError} = useAuth();
+  // Verificar si el usuario ya está autenticado al cargar el componente
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      // Dar un pequeño delay para que se complete la inicialización
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      if (isAuthenticated) {
+        navigation.replace('Tab');
+      } else {
+        setIsInitializing(false);
+      }
+    };
+
+    checkAuthStatus();
+  }, [isAuthenticated, navigation]);
 
   const creteSchema = Yup.object().shape({
     email: Yup.string()
@@ -36,14 +53,44 @@ const InitView = ({}) => {
       clearError(); // Limpiar errores previos
       await login(values);
       // Si el login es exitoso, navegar a la pantalla principal
-      navigation.navigate('Tab');
-    } catch (err) {
+      navigation.replace('Tab');
+    } catch (error) {
       Alert.alert(
         'Error de autenticación',
         err instanceof Error ? err?.message : 'Error al iniciar sesión',
       );
     }
   };
+
+  // Mostrar loading mientras se inicializa la autenticación
+  if (isInitializing) {
+    return (
+      <View style={InitViewStyles.container}>
+        <LinearGradient
+          style={InitViewStyles.gradientStyles}
+          start={{x: 0.5, y: 0}}
+          end={{x: 0.5, y: 1}}
+          colors={[colors.primary, colors.white]}>
+          <View style={InitViewStyles.containerImage}>
+            <Image
+              source={require('../../../assets/images/login.png')}
+              style={InitViewStyles.image}
+            />
+          </View>
+          <View style={InitViewStyles.containerTitle}>
+            <Text style={InitViewStyles.firstTitle}>Recycler</Text>
+            <Text style={InitViewStyles.secondTitle}>App</Text>
+          </View>
+        </LinearGradient>
+        <View style={[InitViewStyles.containerButton, { justifyContent: 'center', alignItems: 'center', flex: 1 }]}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[InitViewStyles.textHelp, { marginTop: 10, color: colors.primary }]}>
+            Verificando sesión...
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={InitViewStyles.container}>

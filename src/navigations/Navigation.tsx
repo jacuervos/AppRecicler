@@ -18,27 +18,16 @@ const MyTheme = {
 };
 
 const Navigation = () => {
-  return (
-    <NavigationContainer theme={MyTheme}>
-      <Stack.Navigator screenOptions={{gestureEnabled: false}}>
-        <Stack.Screen
-          options={{headerShown: false}}
-          name="InitView"
-          component={InitView}
-        />
-        <Stack.Screen
-          options={{headerShown: false}}
-          name="Register"
-          component={Register}
-        />
-        <Stack.Screen
-          options={{headerShown: false}}
-          name="Tab"
-          component={TabComponent}
-        />
-        <Stack.Screen name="Account" component={Account} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-};
+    return (
+        <NavigationContainer
+            theme={MyTheme}
+        >
+            <Stack.Navigator screenOptions={{ gestureEnabled: false }}>
+                <Stack.Screen options={{ headerShown: false }} name="InitView" component={InitView} />
+                <Stack.Screen options={{ headerShown: false }} name="Tab" component={TabComponent} />
+                <Stack.Screen options={{ headerShown: false }} name="Account" component={Account} />
+            </Stack.Navigator>
+        </NavigationContainer>
+    )
+}
 export default Navigation;

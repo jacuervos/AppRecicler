@@ -91,8 +91,8 @@ class AuthApiService {
    */
   async getUserInfo(): Promise<UserInfoResponse> {
     try {
-      const response: AxiosResponse<UserInfoResponse> = await this.api.get('/me');
-
+      const response: AxiosResponse<UserInfoResponse> = await this.api.get('/auth_me');
+      
       // Save user info to AsyncStorage
       if (response.data.success && response.data.data) {
         await AsyncStorage.setItem('user_info', JSON.stringify(response.data.data));
