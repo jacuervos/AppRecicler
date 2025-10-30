@@ -13,11 +13,13 @@ const TabComponent = ({}) => {
     <Tab.Navigator
       screenOptions={({route}) => ({
         tabBarIcon: ({focused, color, size}) => {
-          let iconName;
+          let iconName = 'home'; // valor por defecto
           if (route.name === 'Map') {
             iconName = 'map';
           } else if (route.name === 'History') {
             iconName = 'history';
+          } else if (route.name === 'Account') {
+            iconName = 'user';
           }
           // You can return any component that you like here!
           return (
@@ -43,7 +45,7 @@ const TabComponent = ({}) => {
                   fontFamily: fontFamily.fontFamilySemiBold,
                   fontSize: 15,
                 }}>
-                {route.name === 'Map' ? 'Mapa' : 'Historial' }
+                {route.name === 'Map' ? 'Mapa' : route.name === 'History' ? 'Historial' : 'Cuenta'}
               </Text>
             </View>
           );
