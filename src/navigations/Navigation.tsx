@@ -25,7 +25,7 @@ const Navigation = () => {
             <Stack.Navigator screenOptions={{ gestureEnabled: false }}>
                 <Stack.Screen options={{ headerShown: false }} name="InitView" component={InitView} />
                 <Stack.Screen options={{ headerShown: false }} name="Tab" component={TabComponent} />
-                <Stack.Screen name="Account" component={Account} />
+                <Stack.Screen options={{ headerShown: false }} name="Account" component={Account} />
             </Stack.Navigator>
         </NavigationContainer>
     )
