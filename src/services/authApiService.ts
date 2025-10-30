@@ -1,5 +1,4 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
-import Config from 'react-native-config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LoginCredentials, LoginResponse, UserInfoResponse } from '../types/auth.types';
 
@@ -8,8 +7,8 @@ class AuthApiService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = Config.AUTH_API_URL || 'https://ms-auth-eha5d8bchthmdtd7.centralus-01.azurewebsites.net/api';
-    
+    this.baseURL = 'https://ms-auth-eha5d8bchthmdtd7.centralus-01.azurewebsites.net/api';
+
     this.api = axios.create({
       baseURL: this.baseURL,
       headers: {
@@ -27,7 +26,7 @@ class AuthApiService {
           console.log('Login request - skipping token');
           return config;
         }
-        
+
         const token = await AsyncStorage.getItem('access_token');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
@@ -63,18 +62,18 @@ class AuthApiService {
       console.log('Base URL:', this.baseURL);
       console.log('Full URL:', `${this.baseURL}/login`);
       console.log('Credentials:', { email: credentials.email, password: credentials.password});
-      
+
       const response: AxiosResponse<LoginResponse> = await this.api.post('/login', credentials);
-      
+
       console.log('Response status:', response.status);
       console.log('Response data:', response.data);
-      
+
       // Save token to AsyncStorage
       if (response.data.success && response.data.data.access_token) {
         await AsyncStorage.setItem('access_token', response.data.data.access_token);
         console.log('Token guardado exitosamente');
       }
-      
+
       return response.data;
     } catch (error: any) {
       console.error('=== LOGIN ERROR ===');
@@ -98,7 +97,7 @@ class AuthApiService {
       if (response.data.success && response.data.data) {
         await AsyncStorage.setItem('user_info', JSON.stringify(response.data.data));
       }
-      
+
       return response.data;
     } catch (error) {
       console.error('Get user info error:', error);

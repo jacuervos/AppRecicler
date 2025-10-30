@@ -1,20 +1,20 @@
 import * as React from 'react';
-import { Platform } from 'react-native';
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {Platform} from 'react-native';
+import {NavigationContainer, DefaultTheme} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import InitView from '../screens/InitView/InitView';
 import TabComponent from './Tab';
-import { Account } from '../screens/Account/Account';
-
+import {Account} from '../screens/Account/Account';
+import Register from '../screens/Register/Register.tsx';
 
 const Stack = createNativeStackNavigator();
 
 const MyTheme = {
-    ...DefaultTheme,
-    colors: {
-        ...DefaultTheme.colors,
-        background: Platform.OS === 'ios' ? 'white' : 'transparent'
-    },
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: Platform.OS === 'ios' ? 'white' : 'transparent',
+  },
 };
 
 const Navigation = () => {
