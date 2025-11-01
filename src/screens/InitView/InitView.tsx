@@ -20,7 +20,7 @@ const InitView = ({}) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  const { login, isLoading, error, clearError, isAuthenticated } = useAuth();
+  const { login, isLoading, error, isAuthenticated, clearError } = useAuth();
   const [isInitializing, setIsInitializing] = useState(true);
 
   // Verificar si el usuario ya está autenticado al cargar el componente
@@ -28,7 +28,6 @@ const InitView = ({}) => {
     const checkAuthStatus = async () => {
       // Dar un pequeño delay para que se complete la inicialización
       await new Promise(resolve => setTimeout(resolve, 1000));
-
       if (isAuthenticated) {
         navigation.replace('Tab');
       } else {
