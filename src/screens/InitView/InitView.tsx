@@ -19,8 +19,8 @@ type RootStackParamList = {
 const InitView = ({}) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  
-  const { login, isLoading, error, clearError, isAuthenticated } = useAuth();
+
+  const { login, isLoading, error, isAuthenticated, clearError } = useAuth();
   const [isInitializing, setIsInitializing] = useState(true);
 
   // Verificar si el usuario ya está autenticado al cargar el componente
@@ -28,7 +28,6 @@ const InitView = ({}) => {
     const checkAuthStatus = async () => {
       // Dar un pequeño delay para que se complete la inicialización
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
       if (isAuthenticated) {
         navigation.replace('Tab');
       } else {
@@ -54,7 +53,7 @@ const InitView = ({}) => {
       await login(values);
       // Si el login es exitoso, navegar a la pantalla principal
       navigation.replace('Tab');
-    } catch (error) {
+    } catch (err) {
       Alert.alert(
         'Error de autenticación',
         err instanceof Error ? err?.message : 'Error al iniciar sesión',
