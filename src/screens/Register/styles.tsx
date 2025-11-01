@@ -30,7 +30,7 @@ const RegisterStyles = StyleSheet.create({
     zIndex: 1,
     position: 'absolute',
     top: '57%',
-    right: '38%',
+    right: '-3%',
   },
   containerImage: {
     backgroundColor: colors.white,
@@ -96,7 +96,7 @@ const RegisterStyles = StyleSheet.create({
     width: '90%',
   },
   gradientStyles: {
-    height: '25%',
+    height: '20%',
     justifyContent: 'flex-end',
     alignItems: 'center',
   },

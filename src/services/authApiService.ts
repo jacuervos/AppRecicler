@@ -1,6 +1,12 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LoginCredentials, LoginResponse, UserInfoResponse } from '../types/auth.types';
+import {
+  LoginCredentials,
+  LoginResponse,
+  RegisterCredentials,
+  RegisterResponse,
+  UserInfoResponse,
+} from '../types/auth.types';
 
 class AuthApiService {
   private api: AxiosInstance;
@@ -15,7 +21,7 @@ class AuthApiService {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      timeout: 10000,
+      timeout: 30000,
     });
 
     // Interceptor to add token to requests
@@ -49,6 +55,51 @@ class AuthApiService {
         return Promise.reject(error);
       }
     );
+  }
+
+  /**
+   * Register user with diferents params
+   * @param credentials - Email, password, name, phone, identification, typeIdentification
+   * @returns Register response with info user
+   */
+  async register(credentials: RegisterCredentials): Promise<RegisterResponse> {
+    try {
+      const formData = new FormData();
+      formData.append('name', credentials.name);
+      formData.append('phone', credentials.phone);
+      formData.append('identification', credentials.identification);
+      formData.append('type_identification', credentials.type_identification);
+      formData.append('email', credentials.email);
+      formData.append('password', credentials.password);
+      formData.append('password_confirmation', credentials.password_confirmation);
+      formData.append('images', {
+        uri: credentials.images,
+        type: 'image/png',
+        name: `image_${credentials.name.replace(/\s+/g, '_')}_${credentials.identification}.png`,
+      });
+      formData.append('identification_document', {
+        uri: credentials.identification_document,
+        type: 'application/pdf',
+        name: `identificacion_${credentials.name.replace(/\s+/g, '_')}_${credentials.identification}.pdf`,
+      });
+      formData.append('driving_license_document', {
+        uri: credentials.driving_license_document,
+        type: 'application/pdf',
+        name: `licencia_${credentials.name.replace(/\s+/g, '_')}_${credentials.identification}.pdf`,
+      });
+      const response: AxiosResponse<RegisterResponse> = await this.api.post(
+          '/register_controller',
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+      );
+      return response.data;
+    } catch (error: any) {
+      throw this.handleError(error);
+    }
   }
 
   /**
@@ -92,7 +143,7 @@ class AuthApiService {
   async getUserInfo(): Promise<UserInfoResponse> {
     try {
       const response: AxiosResponse<UserInfoResponse> = await this.api.get('/auth_me');
-      
+
       // Save user info to AsyncStorage
       if (response.data.success && response.data.data) {
         await AsyncStorage.setItem('user_info', JSON.stringify(response.data.data));

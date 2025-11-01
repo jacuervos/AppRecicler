@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import useAuthStore from '../store/authStore';
-import { LoginCredentials } from '../types/auth.types';
+import {LoginCredentials, RegisterCredentials} from '../types/auth.types';
 
 /**
  * Custom hook for authentication operations
@@ -14,9 +14,10 @@ export const useAuth = () => {
     userInfo,
     isLoading,
     error,
-    
+
     // Actions
     login,
+    register,
     logout,
     getUserInfo,
     setLoading,
@@ -29,6 +30,18 @@ export const useAuth = () => {
   useEffect(() => {
     initializeAuth();
   }, []);
+
+  /**
+   * Register with credentials
+   */
+  const handleRegister = async (credentials: RegisterCredentials) => {
+    try {
+      await register(credentials);
+    } catch (error) {
+      // Error is already handled in the store
+      throw error;
+    }
+  };
 
   /**
    * Login with credentials
@@ -105,13 +118,14 @@ export const useAuth = () => {
     userInfo,
     isLoading,
     error,
-    
+
     // Actions
     login: handleLogin,
+    register: handleRegister,
     logout: handleLogout,
     refreshUserInfo,
     clearError,
-    
+
     // Utility functions
     hasRole,
     isUserEnabled,

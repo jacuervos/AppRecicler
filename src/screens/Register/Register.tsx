@@ -25,11 +25,13 @@ import {PrincipalInputSelect} from '../../components/inputSelect/PrincipalInputS
 import useTypeIdentificationStore from '../../store/typeIdentificationStore';
 import {useAuth} from '../../hooks/useAuth';
 import {colors} from '../../utils/constants';
+import {openDocument} from '../../functions/Document';
 import {openCamera, openGallery} from '../../functions/Camera';
 import RegisterStyles from './styles';
-import {openDocument} from "../../functions/Document.ts";
 
-type RootStackParamList = {};
+type RootStackParamList = {
+  Tab: undefined;
+};
 
 const Register = ({}) => {
   const navigation =
@@ -37,7 +39,7 @@ const Register = ({}) => {
 
   const {typeIdentifications, getTypeIdentifications} =
     useTypeIdentificationStore();
-  const {isLoading, error, clearError} = useAuth();
+  const {isLoading, error, clearError, register } = useAuth();
 
   const creteSchema = Yup.object().shape({
     email: Yup.string()
@@ -52,7 +54,7 @@ const Register = ({}) => {
     name: Yup.string().required('El nombre es requerido'),
     phone: Yup.string().required('El teléfono es requerido'),
     identification: Yup.string().required('La identificación es requerida'),
-    typeIdentification: Yup.string().required(
+    type_identification: Yup.string().required(
       'El tipo de identificación es requerido',
     ),
   });
@@ -68,9 +70,18 @@ const Register = ({}) => {
 
   const sheetRef = useRef<BottomSheetModal>(null);
 
-  const handleRegister = (values: any) => {
+  const handleRegister = async (values: any) => {
     if(!errorDocuments.image && !errorDocuments.identity && !errorDocuments.license){
-      console.log(values, 'values register');
+      const findTypeIdentification = typeIdentifications.find((type) => type.name ===  values.type_identification);
+      await register({
+        ...values,
+        email: values.email.toLowerCase(),
+        type_identification: findTypeIdentification !== undefined ? findTypeIdentification.id : 0,
+        images: imageProfile,
+        identification_document: documentIdentity.url,
+        driving_license_document: documentLicense.url,
+      });
+      navigation.replace('Tab');
       clearError();
     }
   };
@@ -137,22 +148,24 @@ const Register = ({}) => {
               start={{x: 0.5, y: 0}}
               end={{x: 0.5, y: 1}}
               colors={[colors.primary, colors.white]}>
-              <View style={RegisterStyles.containerImage}>
-                <Image
-                  source={imageProfile ? {uri: imageProfile} : require('../../../assets/images/login.png')}
-                  style={RegisterStyles.image}
-                />
+              <View>
+                <View style={RegisterStyles.containerImage}>
+                  <Image
+                      source={imageProfile ? {uri: imageProfile} : require('../../../assets/images/login.png')}
+                      style={RegisterStyles.image}
+                  />
+                </View>
+                <Pressable
+                    onPress={openModal}
+                    style={RegisterStyles.containerCamera}>
+                  <MaterialIcons
+                      name={'camera-alt'}
+                      color={colors.black}
+                      size={12}
+                  />
+                </Pressable>
               </View>
-              <Pressable
-                  onPress={openModal}
-                  style={RegisterStyles.containerCamera}>
-                <MaterialIcons
-                  name={'camera-alt'}
-                  color={colors.black}
-                  size={12}
-                />
-              </Pressable>
-              {errorDocuments.identity && (
+              {errorDocuments.image && (
                   <Text style={RegisterStyles.errorText}>Imagen obligatorio</Text>
               )}
               <View style={RegisterStyles.containerTitle}>
@@ -167,7 +180,7 @@ const Register = ({}) => {
                 password_confirmation: '',
                 name: '',
                 phone: '',
-                typeIdentification: '',
+                type_identification: '',
                 identification: '',
               }}
               validationSchema={creteSchema}
@@ -201,14 +214,14 @@ const Register = ({}) => {
                   />
                   <PrincipalInputSelect
                     label={'Seleccionar documento'}
-                    value={values.typeIdentification}
-                    valueChange={'typeIdentification'}
+                    value={values.type_identification}
+                    valueChange={'type_identification'}
                     change={setFieldValue}
                     options={listTypeIdentifications}
                     style={RegisterStyles.inputSelect}
                     error={
-                      !!errors?.typeIdentification &&
-                      touched?.typeIdentification
+                      !!errors?.type_identification &&
+                      touched?.type_identification
                     }
                   />
                   <PrincipalTextInput
@@ -284,12 +297,13 @@ const Register = ({}) => {
                       backgroundColor={colors.primary}
                       disabled={isLoading}
                       action={() => {
+                        console.log(imageProfile === '', 'image');
                         const newErrors = {
                           license: documentLicense.url === '',
                           identity: documentIdentity.url === '',
                           image: imageProfile === '',
                         };
-                        setErrorDocuments(prev => ({ ...prev, ...newErrors }));
+                        setErrorDocuments(newErrors);
                         handleSubmit();
                       }}
                     />
