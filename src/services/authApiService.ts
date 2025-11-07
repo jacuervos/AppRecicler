@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
+  ChangePasswordCredentials,
   LoginCredentials,
   LoginResponse,
   RegisterCredentials,
@@ -69,7 +70,7 @@ class AuthApiService {
       formData.append('phone', credentials.phone);
       formData.append('identification', credentials.identification);
       formData.append('type_identification', credentials.type_identification);
-      formData.append('email', credentials.email);
+      formData.append('email', credentials.email.toLowerCase());
       formData.append('password', credentials.password);
       formData.append('password_confirmation', credentials.password_confirmation);
       formData.append('images', {
@@ -112,9 +113,10 @@ class AuthApiService {
       console.log('=== LOGIN DEBUG ===');
       console.log('Base URL:', this.baseURL);
       console.log('Full URL:', `${this.baseURL}/login`);
-      console.log('Credentials:', { email: credentials.email, password: credentials.password});
+      console.log('Credentials:', { email: credentials.email.toLowerCase(), password: credentials.password});
 
-      const response: AxiosResponse<LoginResponse> = await this.api.post('/login', credentials);
+      const response: AxiosResponse<LoginResponse> = await this.api.post('/login',
+          { email: credentials.email.toLowerCase(), password: credentials.password});
 
       console.log('Response status:', response.status);
       console.log('Response data:', response.data);
@@ -206,6 +208,36 @@ class AuthApiService {
     } catch (error) {
       console.error('Get stored user info error:', error);
       return null;
+    }
+  }
+
+  /**
+   * Validate Code
+   * @param code - Code to validate
+   * @returns message string
+   */
+  async validateCode(code: string): Promise<string> {
+    try {
+      const response: AxiosResponse<RegisterResponse> = await this.api.post('/validate_code',
+          { code: code});
+      return response.data?.message;
+    } catch (error: any) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Change Password
+   * @param credentials - Email, password, code, password_confirmation
+   * @returns message string
+   */
+  async changePassword(credentials: ChangePasswordCredentials): Promise<string> {
+    try {
+      const response: AxiosResponse<RegisterResponse> = await this.api.post('/change_password',
+          credentials);
+      return response.data?.message;
+    } catch (error: any) {
+      throw this.handleError(error);
     }
   }
 

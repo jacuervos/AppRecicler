@@ -1,7 +1,3 @@
-/*!
- * Copyright (c) Laika LLC. All rights reserved.
- */
-
 import {View} from 'react-native';
 import React, {ReactElement} from 'react';
 import MapView, {Marker} from 'react-native-maps';

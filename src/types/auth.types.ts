@@ -67,3 +67,11 @@ export interface RegisterResponse {
   code: number;
   message: string;
 }
+
+// Types for Change Password credentials
+export interface ChangePasswordCredentials {
+  code: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}

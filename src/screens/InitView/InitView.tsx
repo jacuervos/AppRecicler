@@ -14,6 +14,7 @@ import LinearGradient from 'react-native-linear-gradient';
 type RootStackParamList = {
   Tab: undefined;
   Register: undefined;
+  ChangePassword: { email: string };
 };
 
 const InitView = ({}) => {
@@ -54,10 +55,14 @@ const InitView = ({}) => {
       // Si el login es exitoso, navegar a la pantalla principal
       navigation.replace('Tab');
     } catch (err) {
-      Alert.alert(
-        'Error de autenticación',
-        err instanceof Error ? err?.message : 'Error al iniciar sesión',
-      );
+      if((err instanceof Error && err?.message) === 'Actualizar contraseña') {
+        navigation.navigate('ChangePassword', {email: values.email.toLowerCase()});
+      }else {
+        Alert.alert(
+            'Error de autenticación',
+            err instanceof Error ? err?.message : 'Error al iniciar sesión',
+        );
+      }
     }
   };
 

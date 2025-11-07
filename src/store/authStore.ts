@@ -1,13 +1,15 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {AuthState, LoginCredentials, RegisterCredentials} from '../types/auth.types';
+import {AuthState, ChangePasswordCredentials, LoginCredentials, RegisterCredentials} from '../types/auth.types';
 import { authApiService } from '../services/authApiService';
 
 interface AuthActions {
   // Authentication actions
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegisterCredentials) => Promise<void>;
+  validateCode: (code: string) => Promise<void>;
+  changePassword: (credentials: ChangePasswordCredentials) => Promise<void>;
   logout: () => Promise<void>;
   getUserInfo: () => Promise<void>;
 
@@ -96,6 +98,48 @@ const useAuthStore = create<AuthStore>()(
             isAuthenticated: false,
             token: null,
             userInfo: null,
+            isLoading: false,
+            error: errorMessage,
+          });
+          throw error;
+        }
+      },
+
+      validateCode: async (code: string) => {
+        try {
+          set({ isLoading: true, error: null });
+
+         const response = await authApiService.validateCode(code);
+          if (response === 'Código valido, ahora cambia la contraseña') {
+            set({ isLoading: false });
+          } else {
+            set({ isLoading: false, error: response });
+            throw new Error(response || 'Error en el servidor');
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Error de conexión';
+          set({
+            isLoading: false,
+            error: errorMessage,
+          });
+          throw error;
+        }
+      },
+
+      changePassword: async (credentials: ChangePasswordCredentials) => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await authApiService.changePassword(credentials);
+          if (response === 'Contraseña cambiada ya puede iniciar sesión.') {
+            set({ isLoading: false });
+          } else {
+            set({ isLoading: false, error: response });
+            throw new Error(response || 'Error en el servidor');
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Error de conexión';
+          set({
             isLoading: false,
             error: errorMessage,
           });
