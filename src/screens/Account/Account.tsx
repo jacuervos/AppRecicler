@@ -1,7 +1,3 @@
-/*!
- * Copyright (c) Laika LLC. All rights reserved.
- */
-
 import {
   StyleSheet,
   View,
@@ -9,7 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  ActivityIndicator,
+  ActivityIndicator, Image,
 } from 'react-native';
 import React, {ReactElement} from 'react';
 import {colors, fontFamily} from '../../utils/constants';
@@ -77,7 +73,6 @@ export const Account = (): ReactElement => {
           <Icon name="arrow-left" size={20} color={colors.white} />
         </TouchableOpacity>
       </View>
-
       {/* Header con gradiente */}
       <LinearGradient
         style={styles.header}
@@ -85,7 +80,10 @@ export const Account = (): ReactElement => {
         end={{x: 1, y: 1}}
         colors={[colors.primary, '#45A049']}>
         <View style={styles.profileImageContainer}>
-          <Icon name="user" size={40} color={colors.white} />
+          <Image
+            source={{uri: userInfo.photo ?? ''}}
+            style={styles.imageProfile}
+          />
         </View>
         <Text style={styles.welcomeText}>¡Hola, {userInfo.name}!</Text>
         <View style={styles.roleContainer}>
@@ -97,7 +95,7 @@ export const Account = (): ReactElement => {
         {/* Información Personal */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Información Personal</Text>
-          
+
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
               <Icon name="envelope" size={16} color={colors.primary} />
@@ -138,7 +136,7 @@ export const Account = (): ReactElement => {
         {/* Estado de la Cuenta */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Estado de la Cuenta</Text>
-          
+
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
               <Icon name="check-circle" size={16} color={userInfo.state.color} />
@@ -171,7 +169,7 @@ export const Account = (): ReactElement => {
         {/* Opciones de Cuenta */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Opciones</Text>
-          
+
           <TouchableOpacity style={styles.optionButton} onPress={() => Alert.alert('Próximamente', 'Esta función estará disponible pronto')}>
             <Icon name="edit" size={16} color={colors.primary} />
             <Text style={styles.optionText}>Editar Perfil</Text>
@@ -249,7 +247,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   header: {
-    paddingTop: 60,
+    paddingTop: 40,
     paddingBottom: 30,
     paddingHorizontal: 20,
     alignItems: 'center',
@@ -260,7 +258,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
@@ -380,5 +377,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: fontFamily.fontFamilyBold,
     color: colors.white,
+  },
+  imageProfile: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
   },
 });

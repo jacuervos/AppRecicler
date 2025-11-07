@@ -5,7 +5,8 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import InitView from '../screens/InitView/InitView';
 import TabComponent from './Tab';
 import {Account} from '../screens/Account/Account';
-import Register from '../screens/Register/Register.tsx';
+import Register from '../screens/Register/Register';
+import ChangePassword from '../screens/ChangePassword/ChangePassword';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,6 +28,7 @@ const Navigation = () => {
                 <Stack.Screen options={{ headerShown: false }} name="Register" component={Register} />
                 <Stack.Screen options={{ headerShown: false }} name="Tab" component={TabComponent} />
                 <Stack.Screen options={{ headerShown: false }} name="Account" component={Account} />
+                <Stack.Screen options={{ headerShown: false }} name="ChangePassword" component={ChangePassword} />
             </Stack.Navigator>
         </NavigationContainer>
     );

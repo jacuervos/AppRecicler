@@ -8,7 +8,7 @@ const headerStyles = StyleSheet.create({
     paddingHorizontal: 30,
     justifyContent: 'space-between',
     alignItems:'center',
-    flexDirection:'row'
+    flexDirection:'row',
   },
   title: {
     fontFamily: fontFamily.fontFamilyRegular,
@@ -18,6 +18,7 @@ const headerStyles = StyleSheet.create({
   image: {
     width: 40,
     height: 40,
+    borderRadius: 20,
   },
 });
 

@@ -1,7 +1,3 @@
-/*!
- * Copyright (c) Laika LLC. All rights reserved.
- */
-
 import {StyleSheet, View, Text, ScrollView, TouchableOpacity} from 'react-native';
 import React, {ReactElement, useState, useEffect} from 'react';
 import CardHistoryStyles from './styles';
@@ -117,7 +113,7 @@ export const CardHistory = (): ReactElement => {
     }
   };
 
-  const filteredData = historyData.filter(item => 
+  const filteredData = historyData.filter(item =>
     selectedFilter === 'all' || item.status === selectedFilter
   );
 
@@ -181,10 +177,10 @@ export const CardHistory = (): ReactElement => {
                 selectedFilter === filter.key && CardHistoryStyles.filterButtonActive
               ]}
               onPress={() => setSelectedFilter(filter.key as any)}>
-              <Icon 
-                name={filter.icon} 
-                size={14} 
-                color={selectedFilter === filter.key ? colors.white : colors.primary} 
+              <Icon
+                name={filter.icon}
+                size={14}
+                color={selectedFilter === filter.key ? colors.white : colors.primary}
               />
               <Text style={[
                 CardHistoryStyles.filterText,
@@ -204,7 +200,7 @@ export const CardHistory = (): ReactElement => {
             <Icon name="leaf" size={50} color={colors.gray} />
             <Text style={CardHistoryStyles.emptyText}>No hay registros para mostrar</Text>
             <Text style={CardHistoryStyles.emptySubtext}>
-              {selectedFilter === 'all' 
+              {selectedFilter === 'all'
                 ? 'Comienza a reciclar para ver tu historial'
                 : `No tienes entregas ${getStatusText(selectedFilter).toLowerCase()}`
               }

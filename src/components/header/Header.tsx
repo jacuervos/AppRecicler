@@ -12,7 +12,7 @@ export const Header: React.FC<IHeader> = ({action}) => {
           userInfo?.name ? userInfo.name.length > 15 ? userInfo.name.substring(0, 15) + '...' : userInfo.name : ''}</Text>
       <Pressable onPress={action}>
         <Image
-          source={require('../../../assets/images/login.png')}
+          source={userInfo?.photo ? {uri: userInfo.photo} : require('../../../assets/images/login.png')}
           style={headerStyles.image}
         />
       </Pressable>
