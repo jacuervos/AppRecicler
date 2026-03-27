@@ -68,6 +68,16 @@ export interface RegisterResponse {
   message: string;
 }
 
+// Types for password reset
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
 // Types for Change Password credentials
 export interface ChangePasswordCredentials {
   code: string;

@@ -14,7 +14,8 @@ import LinearGradient from 'react-native-linear-gradient';
 type RootStackParamList = {
   Tab: undefined;
   Register: undefined;
-  ChangePassword: { email: string };
+  ChangePassword: {email: string};
+  ForgotPassword: undefined;
 };
 
 const InitView = ({}) => {
@@ -146,6 +147,12 @@ const InitView = ({}) => {
               security={true}
               error={!!errors?.password && touched?.password}
             />
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ForgotPassword')}>
+              <Text style={InitViewStyles.textHelpForgot}>
+                ¿Olvidaste tu contraseña?
+              </Text>
+            </TouchableOpacity>
             <View style={InitViewStyles.containerButton}>
               <PrimaryButton
                 text={isLoading ? 'Iniciando...' : 'Iniciar sesión'}

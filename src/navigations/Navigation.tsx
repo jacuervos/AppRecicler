@@ -7,6 +7,8 @@ import TabComponent from './Tab';
 import {Account} from '../screens/Account/Account';
 import Register from '../screens/Register/Register';
 import ChangePassword from '../screens/ChangePassword/ChangePassword';
+import ForgotPassword from '../screens/ForgotPassword/ForgotPassword.tsx';
+import ResetPassword from '../screens/ResetPassword/ResetPassword.tsx';
 
 const Stack = createNativeStackNavigator();
 
@@ -20,17 +22,45 @@ const MyTheme = {
 
 const Navigation = () => {
     return (
-        <NavigationContainer
-            theme={MyTheme}
-        >
-            <Stack.Navigator screenOptions={{ gestureEnabled: false }}>
-                <Stack.Screen options={{ headerShown: false }} name="InitView" component={InitView} />
-                <Stack.Screen options={{ headerShown: false }} name="Register" component={Register} />
-                <Stack.Screen options={{ headerShown: false }} name="Tab" component={TabComponent} />
-                <Stack.Screen options={{ headerShown: false }} name="Account" component={Account} />
-                <Stack.Screen options={{ headerShown: false }} name="ChangePassword" component={ChangePassword} />
-            </Stack.Navigator>
-        </NavigationContainer>
+      <NavigationContainer theme={MyTheme}>
+        <Stack.Navigator screenOptions={{gestureEnabled: false}}>
+          <Stack.Screen
+            options={{headerShown: false}}
+            name="InitView"
+            component={InitView}
+          />
+          <Stack.Screen
+            options={{headerShown: false}}
+            name="Register"
+            component={Register}
+          />
+          <Stack.Screen
+            options={{headerShown: false}}
+            name="Tab"
+            component={TabComponent}
+          />
+          <Stack.Screen
+            options={{headerShown: false}}
+            name="Account"
+            component={Account}
+          />
+          <Stack.Screen
+            options={{headerShown: false}}
+            name="ChangePassword"
+            component={ChangePassword}
+          />
+          <Stack.Screen
+            options={{headerShown: false}}
+            name="ForgotPassword"
+            component={ForgotPassword}
+          />
+          <Stack.Screen
+            options={{headerShown: false}}
+            name="ResetPassword"
+            component={ResetPassword}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
     );
 };
 export default Navigation;

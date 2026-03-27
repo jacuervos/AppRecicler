@@ -31,38 +31,46 @@ const InitViewStyles = StyleSheet.create({
     flexDirection: 'row',
     marginVertical: 20,
   },
-  firstTitle:{
-    color:colors.primary,
-    fontSize:25,
-    fontFamily: fontFamily.fontFamilyBold
+  firstTitle: {
+    color: colors.primary,
+    fontSize: 25,
+    fontFamily: fontFamily.fontFamilyBold,
   },
-  secondTitle:{
-    color:colors.black,
-    fontSize:25,
-    fontFamily: fontFamily.fontFamilyBold
+  secondTitle: {
+    color: colors.black,
+    fontSize: 25,
+    fontFamily: fontFamily.fontFamilyBold,
   },
   textInput: {
     width: '90%',
     alignSelf: 'center',
     backgroundColor: colors.secondary,
     marginTop: '5%',
-    fontFamily: fontFamily.fontFamilyRegular
+    fontFamily: fontFamily.fontFamilyRegular,
   },
   containerButton: {
     marginTop: '15%',
     alignSelf: 'center',
-    alignItems:'center'
+    alignItems: 'center',
   },
   gradientStyles: {
     height: '40%',
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
-  textHelp:{
-    fontFamily:fontFamily.fontFamilyRegular,
+  textHelp: {
+    fontFamily: fontFamily.fontFamilyRegular,
     textDecorationLine: 'underline',
     marginTop: 10,
-    fontSize:15 
+    fontSize: 15,
+  },
+  textHelpForgot: {
+    fontFamily: fontFamily.fontFamilyRegular,
+    textDecorationLine: 'underline',
+    marginTop: 10,
+    fontSize: 15,
+    width: '90%',
+    alignSelf: 'center',
   },
   errorContainer: {
     backgroundColor: '#fee',

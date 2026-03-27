@@ -70,7 +70,6 @@ const ChangePassword = ({route}: any) => {
   };
 
   const handleChangePassword = async (password: string, passwordConfirmation: string) => {
-    console.log('entra aca no?');
     try {
       clearError();
       let values = {
@@ -79,7 +78,6 @@ const ChangePassword = ({route}: any) => {
         password: password,
         password_confirmation: passwordConfirmation,
       };
-      console.log(values, 'aca');
       await changePassword(values);
       setSaveCode('');
       setScreen('validate');
