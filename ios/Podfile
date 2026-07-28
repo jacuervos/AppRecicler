@@ -14,8 +14,8 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-rn_maps_path = '../node_modules/react-native-maps'
-pod 'react-native-google-maps', :path => rn_maps_path
+# MapLibre React Native setup
+require_relative '../node_modules/@maplibre/maplibre-react-native/scripts/ios/maplibre_post_install'
 
 target 'AppRecicler' do
   config = use_native_modules!
@@ -38,5 +38,8 @@ target 'AppRecicler' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
+    
+    # MapLibre post install hook
+    $MLRN.post_install(installer)
   end
 end

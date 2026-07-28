@@ -2,14 +2,15 @@
  * Copyright (c) Laika LLC. All rights reserved.
  */
 
-import {View, Text, ScrollView, TouchableOpacity, ActivityIndicator} from 'react-native';
-import React, {ReactElement, useEffect} from 'react';
+import {View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert} from 'react-native';
+import React, {ReactElement, useEffect, useState} from 'react';
 import CardHistoryStyles from './styles';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import {colors} from '../../../utils/constants';
 import LinearGradient from 'react-native-linear-gradient';
 import useOrderStore from '../../../store/orderStore';
 import {OrderHistoryItem} from '../../../types/order.types';
+import { orderApiService } from '../../../services/orderApiService';
 
 /**
  * @component Card History
@@ -17,6 +18,7 @@ import {OrderHistoryItem} from '../../../types/order.types';
  */
 export const CardHistory = (): ReactElement => {
   const { myCollections, loading, error, fetchMyCollections } = useOrderStore();
+  const [acceptingOrderId, setAcceptingOrderId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchMyCollections();
@@ -44,6 +46,29 @@ export const CardHistory = (): ReactElement => {
       month: 'short',
       year: 'numeric',
     });
+  };
+
+  const handleAcceptOrder = async (orderId: number) => {
+    try {
+      setAcceptingOrderId(orderId);
+      const response = await orderApiService.acceptOrder(orderId);
+      
+      if (response.success) {
+        Alert.alert('✅ Éxito', 'Orden aceptada. ¡Iniciando servicio!');
+        // Refrescar la lista
+        await fetchMyCollections();
+      } else {
+        Alert.alert('❌ Error', response.message || 'No se pudo aceptar la orden');
+      }
+    } catch (err: any) {
+      Alert.alert('❌ Error', err.message || 'Error al aceptar la orden');
+    } finally {
+      setAcceptingOrderId(null);
+    }
+  };
+
+  const isAssignedOrder = (stateName: string) => {
+    return stateName.toLowerCase().includes('asignad');
   };
 
   const completedCollections = myCollections.filter(item => {
@@ -84,7 +109,7 @@ export const CardHistory = (): ReactElement => {
       );
     }
     return myCollections.map((item: OrderHistoryItem) => (
-      <TouchableOpacity key={item.id} style={CardHistoryStyles.historyCard}>
+      <TouchableOpacity key={item.id} style={CardHistoryStyles.historyCard} disabled={isAssignedOrder(item.state?.name ?? '')}>
         <View style={CardHistoryStyles.cardHeader}>
           <View style={CardHistoryStyles.dateContainer}>
             <Icon name="calendar-alt" size={16} color={colors.primary} />
@@ -143,6 +168,33 @@ export const CardHistory = (): ReactElement => {
               </Text>
             </View>
           </View>
+
+          {/* Botón Iniciar Recogida para órdenes asignadas */}
+          {isAssignedOrder(item.state?.name ?? '') && (
+            <TouchableOpacity
+              style={{
+                marginTop: 12,
+                paddingVertical: 10,
+                paddingHorizontal: 16,
+                backgroundColor: colors.primary,
+                borderRadius: 8,
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+              onPress={() => handleAcceptOrder(item.id)}
+              disabled={acceptingOrderId === item.id}
+            >
+              {acceptingOrderId === item.id ? (
+                <ActivityIndicator color={colors.white} size="small" style={{marginRight: 8}} />
+              ) : (
+                <Icon name="play" size={14} color={colors.white} style={{marginRight: 8}} />
+              )}
+              <Text style={{color: colors.white, fontWeight: '600', fontSize: 14}}>
+                {acceptingOrderId === item.id ? 'Iniciando...' : 'Iniciar recogida'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </TouchableOpacity>
     ));

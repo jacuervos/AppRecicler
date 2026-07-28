@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'http://your-api-url/api';
+const API_BASE_URL = 'https://ms-order-ejh2bwafatarb7cx.canadacentral-01.azurewebsites.net/api';
 
 interface LocationCoords {
   latitude: number;
@@ -45,19 +46,7 @@ interface CompletePointResponse {
   data: PickupPoint;
 }
 
-interface OrderDetailsResponse {
-  success: boolean;
-  data: {
-    order: {
-      id: number;
-      user_name: string;
-      user_phone?: string;
-      scheduled_date: string;
-      status: string;
-    };
-    pickup_points: PickupPoint[];
-  };
-}
+
 
 class CollectorPickupApiService {
   private api: AxiosInstance;
@@ -71,8 +60,8 @@ class CollectorPickupApiService {
     });
 
     // Interceptor para agregar el token
-    this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem('auth_token'); // Obtener del auth store
+    this.api.interceptors.request.use(async (config) => {
+      const token = await AsyncStorage.getItem('access_token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -85,7 +74,7 @@ class CollectorPickupApiService {
    */
   async getMyPickupPoints(): Promise<PickupPointsResponse> {
     try {
-      const response = await this.api.get<PickupPointsResponse>('/collector/pickup-points');
+      const response = await this.api.get<PickupPointsResponse>('/pickup-points');
       return response.data;
     } catch (error: any) {
       throw error.response?.data || error;
@@ -121,33 +110,7 @@ class CollectorPickupApiService {
     }
   }
 
-  /**
-   * Obtener detalles de una orden específica
-   */
-  async getOrderDetails(orderId: number): Promise<OrderDetailsResponse> {
-    try {
-      const response = await this.api.get<OrderDetailsResponse>(
-        `/collector/order/${orderId}/details`
-      );
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data || error;
-    }
-  }
 
-  /**
-   * Obtener el historial de ubicaciones del recolector
-   */
-  async getLocationHistory(collectorId: number, limit: number = 50) {
-    try {
-      const response = await this.api.get(
-        `/collector/location/history/${collectorId}?limit=${limit}`
-      );
-      return response.data;
-    } catch (error: any) {
-      throw error.response?.data || error;
-    }
-  }
 }
 
 export const collectorPickupApiService = new CollectorPickupApiService();

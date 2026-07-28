@@ -15,15 +15,17 @@ import {
   ScrollView,
   Modal,
 } from 'react-native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import * as MapLibreRN from '@maplibre/maplibre-react-native';
+const { MapView, Camera, ShapeSource, CircleLayer, LineLayer } = MapLibreRN;
 import Icon from 'react-native-vector-icons/FontAwesome6';
 import { Header } from '../../components/header/Header';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, fontFamily, shadows } from '../../utils/constants';
-import { getCurrentLocation } from '../../functions/Geolocation';
+import { collectorPickupApiService } from '../../services/collectorPickupApiService';
 
 const { width, height } = Dimensions.get('window');
+const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 
 interface PickupPoint {
   id: number;
@@ -111,7 +113,7 @@ const styles = StyleSheet.create({
   listHeaderTitle: {
     fontSize: 16,
     fontWeight: '600',
-    fontFamily: fontFamily.bold,
+    fontFamily: fontFamily.fontFamilyBold,
     color: colors.text,
   },
   listContent: {
@@ -134,20 +136,20 @@ const styles = StyleSheet.create({
   pointItemTitle: {
     fontSize: 14,
     fontWeight: '600',
-    fontFamily: fontFamily.semibold,
+    fontFamily: fontFamily.fontFamilySemiBold,
     color: colors.text,
     marginBottom: 4,
   },
   pointItemAddress: {
     fontSize: 12,
     color: colors.textSecondary,
-    fontFamily: fontFamily.regular,
+    fontFamily: fontFamily.fontFamilyRegular,
     marginBottom: 4,
   },
   pointItemUser: {
     fontSize: 12,
     color: colors.primary,
-    fontFamily: fontFamily.semibold,
+    fontFamily: fontFamily.fontFamilySemiBold,
     marginBottom: 8,
   },
   completeButton: {
@@ -160,7 +162,7 @@ const styles = StyleSheet.create({
   },
   completeButtonText: {
     color: colors.white,
-    fontFamily: fontFamily.semibold,
+    fontFamily: fontFamily.fontFamilySemiBold,
     fontSize: 12,
   },
   completedBadge: {
@@ -173,7 +175,7 @@ const styles = StyleSheet.create({
   },
   completedBadgeText: {
     color: colors.white,
-    fontFamily: fontFamily.semibold,
+    fontFamily: fontFamily.fontFamilySemiBold,
     fontSize: 11,
   },
   floatingButton: {
@@ -204,7 +206,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     color: colors.error,
-    fontFamily: fontFamily.semibold,
+    fontFamily: fontFamily.fontFamilySemiBold,
     textAlign: 'center',
     marginBottom: 15,
   },
@@ -216,7 +218,7 @@ const styles = StyleSheet.create({
   },
   retryButtonText: {
     color: colors.white,
-    fontFamily: fontFamily.semibold,
+    fontFamily: fontFamily.fontFamilySemiBold,
     fontSize: 14,
   },
   statsContainer: {
@@ -236,12 +238,12 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 12,
     color: colors.textSecondary,
-    fontFamily: fontFamily.regular,
+    fontFamily: fontFamily.fontFamilyRegular,
   },
   statValue: {
     fontSize: 14,
     fontWeight: '600',
-    fontFamily: fontFamily.semibold,
+    fontFamily: fontFamily.fontFamilySemiBold,
     color: colors.primary,
     marginTop: 2,
   },
@@ -255,7 +257,7 @@ const styles = StyleSheet.create({
   detailsTitle: {
     fontSize: 18,
     fontWeight: '700',
-    fontFamily: fontFamily.bold,
+    fontFamily: fontFamily.fontFamilyBold,
     color: colors.text,
     marginBottom: 12,
   },
@@ -265,12 +267,12 @@ const styles = StyleSheet.create({
   detailsLabel: {
     fontSize: 12,
     color: colors.textSecondary,
-    fontFamily: fontFamily.regular,
+    fontFamily: fontFamily.fontFamilyRegular,
   },
   detailsValue: {
     fontSize: 14,
     fontWeight: '500',
-    fontFamily: fontFamily.semibold,
+    fontFamily: fontFamily.fontFamilySemiBold,
     color: colors.text,
     marginTop: 4,
   },
@@ -283,19 +285,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   closeButtonText: {
-    fontFamily: fontFamily.semibold,
+    fontFamily: fontFamily.fontFamilySemiBold,
     color: colors.primary,
   },
 });
 
 /**
- * @component Map
+ * @component MapScreen
  * HU-19: Visualización de puntos de recogida para el recolector
  * @return {ReactElement} - React component
  */
-export const Map = (): ReactElement => {
+export const MapScreen = (): ReactElement => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const mapViewRef = useRef<MapView>(null);
+  const mapViewRef = useRef(null);
+  const [cameraConfig, setCameraConfig] = useState({
+    centerCoordinate: [-74.0721, 4.7110], // [longitude, latitude]
+    zoomLevel: 14,
+    animationDuration: 1000,
+  });
 
   const [pickupPoints, setPickupPoints] = useState<PickupPoint[]>([]);
   const [currentLocation, setCurrentLocation] = useState<LocationCoords | null>(null);
@@ -308,26 +315,12 @@ export const Map = (): ReactElement => {
   // Obtener puntos de recogida
   const fetchPickupPoints = async () => {
     try {
-      const response = await fetch('http://your-api-url/api/collector/pickup-points', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${/* get token from auth store */}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        setError('Error al obtener los puntos de recogida');
-        setLoading(false);
-        return;
-      }
-
-      const data = await response.json();
+      const data = await collectorPickupApiService.getMyPickupPoints();
       if (data.success) {
         setPickupPoints(data.data.pickup_points);
         setError(null);
       } else {
-        setError(data.message || 'Error desconocido');
+        setError('Error al cargar los puntos de recogida');
       }
     } catch (err) {
       setError('Error de conexión. Verifica tu internet.');
@@ -341,7 +334,7 @@ export const Map = (): ReactElement => {
   // Obtener ubicación actual del recolector
   const fetchCurrentLocation = async () => {
     try {
-      const location = await getCurrentLocation();
+      const location = false;
       if (location) {
         setCurrentLocation(location);
         // Enviar ubicación al servidor
@@ -355,17 +348,7 @@ export const Map = (): ReactElement => {
   // Actualizar ubicación del recolector en el servidor
   const updateCollectorLocation = async (location: LocationCoords) => {
     try {
-      await fetch('http://your-api-url/api/collector/location', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${/* get token from auth store */}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          latitude: location.latitude,
-          longitude: location.longitude,
-        }),
-      });
+      await collectorPickupApiService.updateMyLocation(location);
     } catch (err) {
       console.error('Error updating collector location:', err);
     }
@@ -374,23 +357,13 @@ export const Map = (): ReactElement => {
   // Marcar punto como completado
   const completePickupPoint = async (pointId: number) => {
     try {
-      const response = await fetch(
-        `http://your-api-url/api/pickup-point/${pointId}/complete`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Authorization': `Bearer ${/* get token from auth store */}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (response.ok) {
+      const data = await collectorPickupApiService.completePickupPoint(pointId);
+      if (data.success) {
         Alert.alert('Éxito', 'Punto de recogida marcado como completado');
         fetchPickupPoints();
         setShowDetails(false);
       } else {
-        Alert.alert('Error', 'No se pudo marcar como completado');
+        Alert.alert('Error', data.message || 'No se pudo marcar como completado');
       }
     } catch (err) {
       Alert.alert('Error', 'Error al completar el punto');
@@ -415,19 +388,41 @@ export const Map = (): ReactElement => {
 
   // Animar el mapa para mostrar todos los puntos
   useEffect(() => {
-    if (pickupPoints.length > 0 && mapViewRef.current) {
-      const coordinates = pickupPoints.map(point => ({
-        latitude: point.latitude,
-        longitude: point.longitude,
-      }));
+    if (pickupPoints.length > 0) {
+      const coordinates = pickupPoints.map(point => [
+        point.longitude,
+        point.latitude,
+      ]);
 
       if (currentLocation) {
-        coordinates.unshift(currentLocation);
+        coordinates.unshift([currentLocation.longitude, currentLocation.latitude]);
       }
 
-      mapViewRef.current.fitToCoordinates(coordinates, {
-        edgePadding: { top: 100, right: 50, bottom: 200, left: 50 },
-        animated: true,
+      // Calcular bounds de las coordenadas
+      let minLon = coordinates[0][0];
+      let maxLon = coordinates[0][0];
+      let minLat = coordinates[0][1];
+      let maxLat = coordinates[0][1];
+
+      coordinates.forEach(coord => {
+        minLon = Math.min(minLon, coord[0]);
+        maxLon = Math.max(maxLon, coord[0]);
+        minLat = Math.min(minLat, coord[1]);
+        maxLat = Math.max(maxLat, coord[1]);
+      });
+
+      // Calcular el centro y zoom
+      const centerLon = (minLon + maxLon) / 2;
+      const centerLat = (minLat + maxLat) / 2;
+
+      // Estimar zoom level basado en la distancia
+      const maxDelta = Math.max(maxLon - minLon, maxLat - minLat);
+      const zoomLevel = Math.min(16, Math.max(10, 14 - Math.log2(maxDelta * 111)));
+
+      setCameraConfig({
+        centerCoordinate: [centerLon, centerLat],
+        zoomLevel: zoomLevel,
+        animationDuration: 1000,
       });
     }
   }, [pickupPoints, currentLocation]);
@@ -470,66 +465,121 @@ export const Map = (): ReactElement => {
       <MapView
         ref={mapViewRef}
         style={styles.map}
-        initialRegion={{
-          latitude: currentLocation?.latitude ?? 4.7110,
-          longitude: currentLocation?.longitude ?? -74.0721,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        }}
+        mapStyle={MAP_STYLE_URL}
       >
-        {/* Marcador del recolector actual */}
-        {currentLocation && (
-          <Marker coordinate={currentLocation} title="Tu ubicación">
-            <View style={styles.markerContainer}>
-              <View style={styles.collectorMarker}>
-                <Icon name="user" style={styles.markerIcon} />
-              </View>
-            </View>
-          </Marker>
-        )}
+        <Camera
+          centerCoordinate={cameraConfig.centerCoordinate}
+          zoomLevel={cameraConfig.zoomLevel}
+        />
 
-        {/* Marcadores de puntos de recogida */}
-        {pickupPoints.map((point) => (
-          <Marker
-            key={point.id}
-            coordinate={{
-              latitude: point.latitude,
-              longitude: point.longitude,
-            }}
-            title={point.user_name}
-            description={point.address}
-            onPress={() => {
-              setSelectedPoint(point);
-              setShowDetails(true);
+        {/* Capa del marcador del recolector */}
+        {currentLocation && (
+          <ShapeSource
+            id="collector-source"
+            shape={{
+              type: 'FeatureCollection',
+              features: [
+                {
+                  type: 'Feature',
+                  id: 'collector',
+                  properties: { title: 'Tu ubicación' },
+                  geometry: {
+                    type: 'Point',
+                    coordinates: [currentLocation.longitude, currentLocation.latitude],
+                  },
+                },
+              ],
             }}
           >
-            <View style={styles.markerContainer}>
-              <View
-                style={[
-                  styles.pickupMarker,
-                  point.completed_at && styles.pickupMarkerCompleted,
-                ]}
-              >
-                <Icon
-                  name={point.completed_at ? 'check' : 'bag'}
-                  style={styles.markerIcon}
-                />
-              </View>
-            </View>
-          </Marker>
-        ))}
+            <CircleLayer
+              id="collector-layer"
+              style={{
+                circleRadius: 22,
+                circleColor: colors.primary,
+                circleOpacity: 1,
+                circleStrokeWidth: 3,
+                circleStrokeColor: colors.white,
+              }}
+            />
+          </ShapeSource>
+        )}
+
+        {/* Capa de marcadores de puntos de recogida */}
+        {pickupPoints.length > 0 && (
+          <ShapeSource
+            id="pickup-points-source"
+            shape={{
+              type: 'FeatureCollection',
+              features: pickupPoints.map(point => ({
+                type: 'Feature',
+                id: point.id,
+                properties: {
+                  title: point.user_name,
+                  address: point.address,
+                  completed: !!point.completed_at,
+                  order_id: point.order_id,
+                },
+                geometry: {
+                  type: 'Point',
+                  coordinates: [point.longitude, point.latitude],
+                },
+              })),
+            }}
+            onPress={(event: any) => {
+              if (event.features.length > 0) {
+                const feature = event.features[0];
+                const pointId = feature.id as number;
+                const point = pickupPoints.find(p => p.id === pointId);
+                if (point) {
+                  setSelectedPoint(point);
+                  setShowDetails(true);
+                }
+              }
+            }}
+          >
+            <CircleLayer
+              id="pickup-completed-layer"
+              filter={['==', ['get', 'completed'], true]}
+              style={{
+                circleRadius: 17,
+                circleColor: colors.success || '#4CAF50',
+                circleOpacity: 0.8,
+              }}
+            />
+            <CircleLayer
+              id="pickup-pending-layer"
+              filter={['==', ['get', 'completed'], false]}
+              style={{
+                circleRadius: 17,
+                circleColor: colors.secondary,
+                circleOpacity: 0.8,
+              }}
+            />
+          </ShapeSource>
+        )}
 
         {/* Línea de ruta entre puntos */}
         {pickupPoints.length > 1 && (
-          <Polyline
-            coordinates={pickupPoints.map(p => ({
-              latitude: p.latitude,
-              longitude: p.longitude,
-            }))}
-            strokeColor={colors.primary}
-            strokeWidth={2}
-            lineDashPattern={[5, 5]}
-          />
+          <ShapeSource
+            id="route-line-source"
+            shape={{
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates: pickupPoints.map(p => [p.longitude, p.latitude]),
+              },
+            }}
+          >
+            <LineLayer
+              id="route-line-layer"
+              style={{
+                lineColor: colors.primary,
+                lineWidth: 3,
+                lineOpacity: 0.7,
+              }}
+            />
+          </ShapeSource>
         )}
       </MapView>
 

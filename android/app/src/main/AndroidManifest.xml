@@ -12,7 +12,7 @@
       android:supportsRtl="true">
       <meta-data
       android:name="com.google.android.geo.API_KEY"
-      android:value="Your Google maps API Key Here"/>
+      android:value="AIzaSyA9v5dwCvyaVOhzDIkddnWOL2tSLX8Xxzw"/>
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"

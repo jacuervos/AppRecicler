@@ -26,6 +26,20 @@ const orderApiService = {
     const data = await response.json();
     return data.data;
   },
+
+  acceptOrder: async (orderId: number): Promise<any> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${ORDERS_API_URL}/orders/${orderId}/accept`, {
+      method: 'POST',
+      headers,
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error al aceptar la orden');
+    }
+    const data = await response.json();
+    return data;
+  },
 };
 
 export { orderApiService };

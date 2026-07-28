@@ -7,7 +7,7 @@ class AuthApiService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = 'https://ms-auth-eha5d8bchthmdtd7.centralus-01.azurewebsites.net/api';
+    this.baseURL = 'https://ms-auth-eha5d8bchthmdtd7.canadacentral-01.azurewebsites.net/api';
 
     this.api = axios.create({
       baseURL: this.baseURL,
