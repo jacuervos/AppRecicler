@@ -3,7 +3,7 @@
  * HU-19: Visualización de puntos de recogida para el recolector
  */
 
-import React, { ReactElement, useEffect, useState, useRef } from 'react';
+import React, { ReactElement, useCallback, useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,18 +14,23 @@ import {
   Dimensions,
   ScrollView,
   Modal,
+  Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as MapLibreRN from '@maplibre/maplibre-react-native';
-const { MapView, Camera, ShapeSource, CircleLayer, LineLayer } = MapLibreRN;
-import Icon from 'react-native-vector-icons/FontAwesome6';
+const { MapView, Camera, ShapeSource, SymbolLayer, LineLayer, Images } = MapLibreRN;
+import Icon from 'react-native-vector-icons/FontAwesome5';
 import { Header } from '../../components/header/Header';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, fontFamily, shadows } from '../../utils/constants';
 import { collectorPickupApiService } from '../../services/collectorPickupApiService';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
+const TRACKING_INTERVAL_MS = 30000;
+const ADDRESS_CACHE_PREFIX = 'point_reverse_geocode:';
+const ADDRESS_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 interface PickupPoint {
   id: number;
@@ -182,10 +187,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 80,
     right: 15,
-    backgroundColor: colors.white,
+    zIndex: 20,
+    backgroundColor: colors.primary,
     width: 50,
     height: 50,
     borderRadius: 25,
+    borderWidth: 1,
+    borderColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
     ...shadows.md,
@@ -225,27 +233,30 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 80,
     left: 15,
-    right: 15,
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    padding: 12,
-    ...shadows.md,
-    maxWidth: 160,
+    backgroundColor: 'rgba(255,255,255,0.88)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    ...shadows.sm,
+    maxWidth: 220,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   statItem: {
-    marginBottom: 8,
+    marginBottom: 0,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 10,
     color: colors.textSecondary,
     fontFamily: fontFamily.fontFamilyRegular,
   },
   statValue: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     fontFamily: fontFamily.fontFamilySemiBold,
     color: colors.primary,
-    marginTop: 2,
+    marginTop: 1,
   },
   detailsModal: {
     backgroundColor: colors.white,
@@ -288,6 +299,51 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.fontFamilySemiBold,
     color: colors.primary,
   },
+  trackingBanner: {
+    marginLeft: 2,
+    paddingLeft: 8,
+    borderLeftWidth: 1,
+    borderLeftColor: colors.border || '#f0f0f0',
+    maxWidth: 92,
+  },
+  trackingTitle: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    fontFamily: fontFamily.fontFamilyRegular,
+  },
+  trackingValue: {
+    marginTop: 2,
+    fontSize: 12,
+    color: colors.primary,
+    fontFamily: fontFamily.fontFamilySemiBold,
+  },
+  trackingAddress: {
+    marginTop: 4,
+    fontSize: 11,
+    color: colors.text,
+    fontFamily: fontFamily.fontFamilyRegular,
+  },
+  startRouteButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 10,
+    alignSelf: 'flex-start',
+  },
+  arrivedButton: {
+    backgroundColor: colors.success || '#4CAF50',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 10,
+    alignSelf: 'flex-start',
+  },
+  routeButtonText: {
+    color: colors.white,
+    fontFamily: fontFamily.fontFamilySemiBold,
+    fontSize: 12,
+  },
 });
 
 /**
@@ -311,6 +367,136 @@ export const MapScreen = (): ReactElement => {
   const [selectedPoint, setSelectedPoint] = useState<PickupPoint | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [isListCollapsed, setIsListCollapsed] = useState(false);
+  const [isTrackingRoute, setIsTrackingRoute] = useState(false);
+  const [activeRoutePoint, setActiveRoutePoint] = useState<PickupPoint | null>(null);
+  const [resolvedAddresses, setResolvedAddresses] = useState<Record<string, string>>({});
+  const [loadingAddressKeys, setLoadingAddressKeys] = useState<string[]>([]);
+  const lastSentAtRef = useRef(0);
+
+  const getPointAddressKey = (point: PickupPoint): string => (
+    `${point.latitude.toFixed(5)}:${point.longitude.toFixed(5)}`
+  );
+
+  const getAddress = async (lat: number, lon: number): Promise<string> => {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+
+    const res = await fetch(url, {
+      headers: {
+        Accept: 'application/json',
+        'Accept-Language': 'es',
+        'User-Agent': 'AppRecicler/1.0',
+      },
+    });
+
+    const data = await res.json();
+
+    return data?.name || data?.display_name || 'Sin dirección';
+  };
+
+  const resolveAddressByPoint = useCallback(async (point: PickupPoint): Promise<void> => {
+    const pointKey = getPointAddressKey(point);
+    const cacheKey = `${ADDRESS_CACHE_PREFIX}${pointKey}`;
+
+    if (resolvedAddresses[pointKey]) {
+      return;
+    }
+
+    setLoadingAddressKeys((prev) => (prev.includes(pointKey) ? prev : [...prev, pointKey]));
+
+    try {
+      const cached = await AsyncStorage.getItem(cacheKey);
+
+      if (cached) {
+        const parsed = JSON.parse(cached) as { address: string; timestamp: number };
+        const isFresh = Date.now() - parsed.timestamp < ADDRESS_CACHE_TTL_MS;
+
+        if (isFresh && parsed.address) {
+          setResolvedAddresses((prev) => ({ ...prev, [pointKey]: parsed.address }));
+          return;
+        }
+      }
+
+      const address = await getAddress(point.latitude, point.longitude);
+
+      setResolvedAddresses((prev) => ({ ...prev, [pointKey]: address }));
+      await AsyncStorage.setItem(
+        cacheKey,
+        JSON.stringify({ address, timestamp: Date.now() }),
+      );
+    } catch (errorAddress) {
+      console.error('Error resolving point address:', errorAddress);
+      setResolvedAddresses((prev) => ({ ...prev, [pointKey]: getPointAddress(point) }));
+    } finally {
+      setLoadingAddressKeys((prev) => prev.filter((k) => k !== pointKey));
+    }
+  }, [resolvedAddresses]);
+
+  const requestLocationPermission = async (): Promise<boolean> => {
+    if (Platform.OS === 'android') {
+      try {
+        return await MapLibreRN.requestAndroidLocationPermissions();
+      } catch (errorPermission) {
+        console.error('Error requesting Android location permissions:', errorPermission);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const sendLocationToApiIfNeeded = useCallback(async (
+    location: LocationCoords,
+    force = false,
+  ): Promise<void> => {
+    if (!isTrackingRoute && !force) {
+      return;
+    }
+
+    const now = Date.now();
+    if (!force && now - lastSentAtRef.current < TRACKING_INTERVAL_MS) {
+      return;
+    }
+
+    try {
+      await updateCollectorLocation(location);
+      lastSentAtRef.current = now;
+    } catch (errorUpdate) {
+      console.error('Error sending location to API:', errorUpdate);
+    }
+  }, [isTrackingRoute]);
+
+  const loadLastKnownLocation = useCallback(async (forceSend = false): Promise<void> => {
+    try {
+      const lastKnownLocation = await MapLibreRN.LocationManager.getLastKnownLocation();
+
+      if (lastKnownLocation?.coords) {
+        const location = {
+          latitude: lastKnownLocation.coords.latitude,
+          longitude: lastKnownLocation.coords.longitude,
+        };
+
+        setCurrentLocation(location);
+        await sendLocationToApiIfNeeded(location, forceSend);
+      }
+    } catch (err) {
+      console.error('Error loading last known location:', err);
+    }
+  }, [sendLocationToApiIfNeeded]);
+
+  const handleUserLocationUpdate = async (locationEvent: any) => {
+    if (!locationEvent?.coords) {
+      return;
+    }
+
+    const location = {
+      latitude: locationEvent.coords.latitude,
+      longitude: locationEvent.coords.longitude,
+    };
+
+    setCurrentLocation(location);
+    await sendLocationToApiIfNeeded(location);
+  };
 
   // Obtener puntos de recogida
   const fetchPickupPoints = async () => {
@@ -331,20 +517,6 @@ export const MapScreen = (): ReactElement => {
     }
   };
 
-  // Obtener ubicación actual del recolector
-  const fetchCurrentLocation = async () => {
-    try {
-      const location = false;
-      if (location) {
-        setCurrentLocation(location);
-        // Enviar ubicación al servidor
-        await updateCollectorLocation(location);
-      }
-    } catch (err) {
-      console.error('Error getting current location:', err);
-    }
-  };
-
   // Actualizar ubicación del recolector en el servidor
   const updateCollectorLocation = async (location: LocationCoords) => {
     try {
@@ -362,6 +534,12 @@ export const MapScreen = (): ReactElement => {
         Alert.alert('Éxito', 'Punto de recogida marcado como completado');
         fetchPickupPoints();
         setShowDetails(false);
+
+        if (activeRoutePoint?.id === pointId) {
+          setIsTrackingRoute(false);
+          setActiveRoutePoint(null);
+          lastSentAtRef.current = 0;
+        }
       } else {
         Alert.alert('Error', data.message || 'No se pudo marcar como completado');
       }
@@ -373,18 +551,44 @@ export const MapScreen = (): ReactElement => {
 
   // Cargar datos iniciales
   useEffect(() => {
-    fetchCurrentLocation();
+    requestLocationPermission().catch((permissionError) => {
+      console.error('Error requesting location permission:', permissionError);
+    });
+
+    loadLastKnownLocation();
     fetchPickupPoints();
-  }, []);
+  }, [loadLastKnownLocation]);
 
-  // Actualizar ubicación cada 30 segundos
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchCurrentLocation();
-    }, 30000);
+  const startTrackingToPoint = async (point: PickupPoint) => {
+    const hasPermission = await requestLocationPermission();
 
-    return () => clearInterval(interval);
-  }, []);
+    if (!hasPermission) {
+      Alert.alert(
+        'Permiso requerido',
+        'Debes habilitar permisos de ubicación para enviar tu ubicación al punto.',
+      );
+      return;
+    }
+
+    setActiveRoutePoint(point);
+    setIsTrackingRoute(true);
+    lastSentAtRef.current = 0;
+    await loadLastKnownLocation(true);
+    setShowDetails(false);
+
+    Alert.alert('Ruta iniciada', `Ahora estás enviando ubicación para llegar a ${point.user_name}.`);
+  };
+
+  const markArrivedAndStopTracking = () => {
+    const targetName = activeRoutePoint?.user_name || 'el punto';
+
+    setIsTrackingRoute(false);
+    setActiveRoutePoint(null);
+    lastSentAtRef.current = 0;
+    setShowDetails(false);
+
+    Alert.alert('Llegada registrada', `Se dejó de enviar ubicación para ${targetName}.`);
+  };
 
   // Animar el mapa para mostrar todos los puntos
   useEffect(() => {
@@ -429,12 +633,33 @@ export const MapScreen = (): ReactElement => {
 
   const handleRefresh = () => {
     setRefreshing(true);
-    fetchCurrentLocation();
+    loadLastKnownLocation();
     fetchPickupPoints();
+  };
+
+  const getPointAddress = (point: PickupPoint): string => {
+    const address = point.address?.trim();
+    if (address) {
+      return address;
+    }
+
+    return `${point.latitude.toFixed(5)}, ${point.longitude.toFixed(5)}`;
   };
 
   const completedCount = pickupPoints.filter(p => p.completed_at).length;
   const pendingCount = pickupPoints.length - completedCount;
+
+  useEffect(() => {
+    if (activeRoutePoint) {
+      resolveAddressByPoint(activeRoutePoint);
+    }
+  }, [activeRoutePoint, resolveAddressByPoint]);
+
+  useEffect(() => {
+    if (selectedPoint) {
+      resolveAddressByPoint(selectedPoint);
+    }
+  }, [selectedPoint, resolveAddressByPoint]);
 
   if (loading) {
     return (
@@ -467,6 +692,19 @@ export const MapScreen = (): ReactElement => {
         style={styles.map}
         mapStyle={MAP_STYLE_URL}
       >
+        <Images
+          images={{
+            collectorIcon: require('../../../assets/images/recolector.png'),
+            pickupIcon: require('../../../assets/images/recogida.png'),
+          }}
+        />
+
+        <MapLibreRN.UserLocation
+          visible={false}
+          minDisplacement={3}
+          onUpdate={handleUserLocationUpdate}
+        />
+
         <Camera
           centerCoordinate={cameraConfig.centerCoordinate}
           zoomLevel={cameraConfig.zoomLevel}
@@ -491,14 +729,13 @@ export const MapScreen = (): ReactElement => {
               ],
             }}
           >
-            <CircleLayer
+            <SymbolLayer
               id="collector-layer"
               style={{
-                circleRadius: 22,
-                circleColor: colors.primary,
-                circleOpacity: 1,
-                circleStrokeWidth: 3,
-                circleStrokeColor: colors.white,
+                iconImage: 'collectorIcon',
+                iconSize: 0.14,
+                iconAllowOverlap: true,
+                iconIgnorePlacement: true,
               }}
             />
           </ShapeSource>
@@ -537,22 +774,25 @@ export const MapScreen = (): ReactElement => {
               }
             }}
           >
-            <CircleLayer
+            <SymbolLayer
               id="pickup-completed-layer"
               filter={['==', ['get', 'completed'], true]}
               style={{
-                circleRadius: 17,
-                circleColor: colors.success || '#4CAF50',
-                circleOpacity: 0.8,
+                iconImage: 'pickupIcon',
+                iconSize: 0.11,
+                iconAllowOverlap: true,
+                iconIgnorePlacement: true,
+                iconOpacity: 0.65,
               }}
             />
-            <CircleLayer
+            <SymbolLayer
               id="pickup-pending-layer"
               filter={['==', ['get', 'completed'], false]}
               style={{
-                circleRadius: 17,
-                circleColor: colors.secondary,
-                circleOpacity: 0.8,
+                iconImage: 'pickupIcon',
+                iconSize: 0.11,
+                iconAllowOverlap: true,
+                iconIgnorePlacement: true,
               }}
             />
           </ShapeSource>
@@ -586,19 +826,37 @@ export const MapScreen = (): ReactElement => {
       {/* Estadísticas */}
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Total de puntos</Text>
+          <Text style={styles.statLabel}>Total</Text>
           <Text style={styles.statValue}>{pickupPoints.length}</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Pendientes</Text>
+          <Text style={styles.statLabel}>Pend.</Text>
           <Text style={[styles.statValue, { color: colors.secondary }]}>
             {pendingCount}
           </Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statLabel}>Completados</Text>
+          <Text style={styles.statLabel}>Comp.</Text>
           <Text style={[styles.statValue, { color: colors.success || '#4CAF50' }]}>
             {completedCount}
+          </Text>
+        </View>
+
+        <View style={styles.trackingBanner}>
+          <Text style={styles.trackingTitle}>Estado de ubicación</Text>
+          <Text style={styles.trackingValue}>
+            {isTrackingRoute && activeRoutePoint
+              ? `En camino a ${activeRoutePoint.user_name}`
+              : 'Ubicación en pausa'}
+          </Text>
+          <Text style={styles.trackingAddress} numberOfLines={2}>
+            {isTrackingRoute && activeRoutePoint
+              ? (
+                loadingAddressKeys.includes(getPointAddressKey(activeRoutePoint))
+                  ? 'Buscando dirección...'
+                  : (resolvedAddresses[getPointAddressKey(activeRoutePoint)] || getPointAddress(activeRoutePoint))
+              )
+              : 'Selecciona un punto para ver dirección de destino'}
           </Text>
         </View>
       </View>
@@ -610,21 +868,35 @@ export const MapScreen = (): ReactElement => {
         disabled={refreshing}
       >
         {refreshing ? (
-          <ActivityIndicator color={colors.primary} size="small" />
+          <ActivityIndicator color={colors.white} size="small" />
         ) : (
-          <Icon name="sync" size={20} color={colors.primary} />
+          <Icon name="sync-alt" solid size={18} color={colors.white} />
         )}
       </TouchableOpacity>
 
       {/* Lista de puntos */}
-      <View style={styles.listContainer}>
-        <View style={styles.listHeader}>
+      <View
+        style={[
+          styles.listContainer,
+          isListCollapsed && { maxHeight: 64 },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.listHeader}
+          onPress={() => setIsListCollapsed((prev) => !prev)}
+          activeOpacity={0.8}
+        >
           <Text style={styles.listHeaderTitle}>
             Puntos de Recogida ({pendingCount})
           </Text>
-          <Icon name="chevron-up" size={16} color={colors.textSecondary} />
-        </View>
-        <ScrollView style={styles.listContent} showsVerticalScrollIndicator={false}>
+          <Icon
+            name={isListCollapsed ? 'chevron-up' : 'chevron-down'}
+            size={16}
+            color={colors.textSecondary}
+          />
+        </TouchableOpacity>
+        {!isListCollapsed && (
+          <ScrollView style={styles.listContent} showsVerticalScrollIndicator={false}>
           {pickupPoints.map((point) => (
             <TouchableOpacity
               key={point.id}
@@ -661,7 +933,8 @@ export const MapScreen = (): ReactElement => {
               )}
             </TouchableOpacity>
           ))}
-        </ScrollView>
+          </ScrollView>
+        )}
       </View>
 
       {/* Modal de detalles */}
@@ -683,9 +956,20 @@ export const MapScreen = (): ReactElement => {
                 </View>
 
                 <View style={styles.detailsContent}>
-                  <Text style={styles.detailsLabel}>Dirección</Text>
-                  <Text style={styles.detailsValue}>{selectedPoint.address}</Text>
+                  <Text style={styles.detailsLabel}>Dirección de recogida</Text>
+                  <Text style={styles.detailsValue}>
+                    {loadingAddressKeys.includes(getPointAddressKey(selectedPoint))
+                      ? 'Buscando dirección...'
+                      : (resolvedAddresses[getPointAddressKey(selectedPoint)] || getPointAddress(selectedPoint))}
+                  </Text>
                 </View>
+
+                {isTrackingRoute && activeRoutePoint?.id === selectedPoint.id && (
+                  <View style={styles.detailsContent}>
+                    <Text style={styles.detailsLabel}>Estado del punto</Text>
+                    <Text style={[styles.detailsValue, { color: colors.primary }]}>Destino actual en camino</Text>
+                  </View>
+                )}
 
                 {selectedPoint.user_phone && (
                   <View style={styles.detailsContent}>
@@ -699,6 +983,22 @@ export const MapScreen = (): ReactElement => {
                     <Text style={styles.detailsLabel}>Notas</Text>
                     <Text style={styles.detailsValue}>{selectedPoint.notes}</Text>
                   </View>
+                )}
+
+                {!isTrackingRoute || activeRoutePoint?.id !== selectedPoint.id ? (
+                  <TouchableOpacity
+                    style={styles.startRouteButton}
+                    onPress={() => startTrackingToPoint(selectedPoint)}
+                  >
+                    <Text style={styles.routeButtonText}>Voy para este punto</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.arrivedButton}
+                    onPress={markArrivedAndStopTracking}
+                  >
+                    <Text style={styles.routeButtonText}>Ya llegué (detener ubicación)</Text>
+                  </TouchableOpacity>
                 )}
 
                 {!selectedPoint.completed_at ? (
