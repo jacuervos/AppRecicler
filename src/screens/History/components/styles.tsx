@@ -76,6 +76,22 @@ const CardHistoryStyles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 15,
   },
+  refreshButton: {
+    marginHorizontal: 15,
+    marginBottom: 10,
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  refreshButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontFamily: fontFamily.fontFamilySemiBold,
+  },
 
   // Estado vacío
   emptyContainer: {

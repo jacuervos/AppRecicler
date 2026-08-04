@@ -99,10 +99,10 @@ class CollectorPickupApiService {
   /**
    * Marcar un punto de recogida como completado
    */
-  async completePickupPoint(pointId: number): Promise<CompletePointResponse> {
+  async completePickupPoint(orderId: number): Promise<CompletePointResponse> {
     try {
-      const response = await this.api.patch<CompletePointResponse>(
-        `/pickup-point/${pointId}/complete`
+      const response = await this.api.put<CompletePointResponse>(
+        `/orders/${orderId}/complete`
       );
       return response.data;
     } catch (error: any) {

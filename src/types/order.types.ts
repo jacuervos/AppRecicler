@@ -2,6 +2,7 @@ export interface OrderTypeWaste {
   id: number;
   order_id: number;
   type_waste_id: number;
+  name?: string | null;
   type_waste: string | null;
   weight: number;
   points: number;

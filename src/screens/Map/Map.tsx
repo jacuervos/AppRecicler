@@ -25,6 +25,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, fontFamily, shadows } from '../../utils/constants';
 import { collectorPickupApiService } from '../../services/collectorPickupApiService';
+import useOrderStore from '../../store/orderStore';
 
 const { width } = Dimensions.get('window');
 const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
@@ -353,6 +354,7 @@ const styles = StyleSheet.create({
  */
 export const MapScreen = (): ReactElement => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const fetchMyCollections = useOrderStore((state) => state.fetchMyCollections);
   const mapViewRef = useRef(null);
   const [cameraConfig, setCameraConfig] = useState({
     centerCoordinate: [-74.0721, 4.7110], // [longitude, latitude]
@@ -372,6 +374,7 @@ export const MapScreen = (): ReactElement => {
   const [activeRoutePoint, setActiveRoutePoint] = useState<PickupPoint | null>(null);
   const [resolvedAddresses, setResolvedAddresses] = useState<Record<string, string>>({});
   const [loadingAddressKeys, setLoadingAddressKeys] = useState<string[]>([]);
+  const [completingOrderId, setCompletingOrderId] = useState<number | null>(null);
   const lastSentAtRef = useRef(0);
 
   const getPointAddressKey = (point: PickupPoint): string => (
@@ -424,8 +427,8 @@ export const MapScreen = (): ReactElement => {
         cacheKey,
         JSON.stringify({ address, timestamp: Date.now() }),
       );
-    } catch (errorAddress) {
-      console.error('Error resolving point address:', errorAddress);
+    } catch (error_) {
+      console.error('Error resolving point address:', error_);
       setResolvedAddresses((prev) => ({ ...prev, [pointKey]: getPointAddress(point) }));
     } finally {
       setLoadingAddressKeys((prev) => prev.filter((k) => k !== pointKey));
@@ -436,8 +439,8 @@ export const MapScreen = (): ReactElement => {
     if (Platform.OS === 'android') {
       try {
         return await MapLibreRN.requestAndroidLocationPermissions();
-      } catch (errorPermission) {
-        console.error('Error requesting Android location permissions:', errorPermission);
+      } catch (error_) {
+        console.error('Error requesting Android location permissions:', error_);
         return false;
       }
     }
@@ -461,8 +464,8 @@ export const MapScreen = (): ReactElement => {
     try {
       await updateCollectorLocation(location);
       lastSentAtRef.current = now;
-    } catch (errorUpdate) {
-      console.error('Error sending location to API:', errorUpdate);
+    } catch (error_) {
+      console.error('Error sending location to API:', error_);
     }
   }, [isTrackingRoute]);
 
@@ -527,15 +530,20 @@ export const MapScreen = (): ReactElement => {
   };
 
   // Marcar punto como completado
-  const completePickupPoint = async (pointId: number) => {
+  const completePickupPoint = async (orderId: number) => {
+    setCompletingOrderId(orderId);
+
     try {
-      const data = await collectorPickupApiService.completePickupPoint(pointId);
+      const data = await collectorPickupApiService.completePickupPoint(orderId);
       if (data.success) {
         Alert.alert('Éxito', 'Punto de recogida marcado como completado');
-        fetchPickupPoints();
+        await Promise.all([
+          fetchPickupPoints(),
+          fetchMyCollections(),
+        ]);
         setShowDetails(false);
 
-        if (activeRoutePoint?.id === pointId) {
+        if (activeRoutePoint?.order_id === orderId) {
           setIsTrackingRoute(false);
           setActiveRoutePoint(null);
           lastSentAtRef.current = 0;
@@ -546,7 +554,26 @@ export const MapScreen = (): ReactElement => {
     } catch (err) {
       Alert.alert('Error', 'Error al completar el punto');
       console.error('Error completing pickup point:', err);
+    } finally {
+      setCompletingOrderId(null);
     }
+  };
+
+  const confirmCompletePickupPoint = (point: PickupPoint) => {
+    Alert.alert(
+      'Confirmar completado',
+      `¿Deseas marcar como completada la orden #${point.order_id}?`,
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Sí, completar',
+          onPress: () => completePickupPoint(point.order_id),
+        },
+      ],
+    );
   };
 
   // Cargar datos iniciales
@@ -577,6 +604,28 @@ export const MapScreen = (): ReactElement => {
     setShowDetails(false);
 
     Alert.alert('Ruta iniciada', `Ahora estás enviando ubicación para llegar a ${point.user_name}.`);
+  };
+
+  const requestRouteChange = (point: PickupPoint) => {
+    if (!activeRoutePoint || activeRoutePoint.id === point.id) {
+      startTrackingToPoint(point);
+      return;
+    }
+
+    Alert.alert(
+      'Cambiar destino activo',
+      `Actualmente vas hacia ${activeRoutePoint.user_name}. ¿Quieres cambiar a ${point.user_name}?`,
+      [
+        {
+          text: 'No cambiar',
+          style: 'cancel',
+        },
+        {
+          text: 'Sí, cambiar',
+          onPress: () => startTrackingToPoint(point),
+        },
+      ],
+    );
   };
 
   const markArrivedAndStopTracking = () => {
@@ -648,6 +697,18 @@ export const MapScreen = (): ReactElement => {
 
   const completedCount = pickupPoints.filter(p => p.completed_at).length;
   const pendingCount = pickupPoints.length - completedCount;
+
+  const getTrackingAddressText = (): string => {
+    if (!isTrackingRoute || !activeRoutePoint) {
+      return 'Selecciona un punto para ver dirección de destino';
+    }
+
+    if (loadingAddressKeys.includes(getPointAddressKey(activeRoutePoint))) {
+      return 'Buscando dirección...';
+    }
+
+    return resolvedAddresses[getPointAddressKey(activeRoutePoint)] || getPointAddress(activeRoutePoint);
+  };
 
   useEffect(() => {
     if (activeRoutePoint) {
@@ -831,7 +892,7 @@ export const MapScreen = (): ReactElement => {
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Pend.</Text>
-          <Text style={[styles.statValue, { color: colors.secondary }]}>
+          <Text style={[styles.statValue, { color: colors.primary }]}> 
             {pendingCount}
           </Text>
         </View>
@@ -850,13 +911,7 @@ export const MapScreen = (): ReactElement => {
               : 'Ubicación en pausa'}
           </Text>
           <Text style={styles.trackingAddress} numberOfLines={2}>
-            {isTrackingRoute && activeRoutePoint
-              ? (
-                loadingAddressKeys.includes(getPointAddressKey(activeRoutePoint))
-                  ? 'Buscando dirección...'
-                  : (resolvedAddresses[getPointAddressKey(activeRoutePoint)] || getPointAddress(activeRoutePoint))
-              )
-              : 'Selecciona un punto para ver dirección de destino'}
+            {getTrackingAddressText()}
           </Text>
         </View>
       </View>
@@ -926,9 +981,14 @@ export const MapScreen = (): ReactElement => {
               ) : (
                 <TouchableOpacity
                   style={styles.completeButton}
-                  onPress={() => completePickupPoint(point.id)}
+                  onPress={() => confirmCompletePickupPoint(point)}
+                  disabled={completingOrderId === point.order_id}
                 >
-                  <Text style={styles.completeButtonText}>Marcar completado</Text>
+                  {completingOrderId === point.order_id ? (
+                    <ActivityIndicator color={colors.white} size="small" />
+                  ) : (
+                    <Text style={styles.completeButtonText}>Marcar completado</Text>
+                  )}
                 </TouchableOpacity>
               )}
             </TouchableOpacity>
@@ -988,7 +1048,7 @@ export const MapScreen = (): ReactElement => {
                 {!isTrackingRoute || activeRoutePoint?.id !== selectedPoint.id ? (
                   <TouchableOpacity
                     style={styles.startRouteButton}
-                    onPress={() => startTrackingToPoint(selectedPoint)}
+                    onPress={() => requestRouteChange(selectedPoint)}
                   >
                     <Text style={styles.routeButtonText}>Voy para este punto</Text>
                   </TouchableOpacity>
@@ -1004,11 +1064,14 @@ export const MapScreen = (): ReactElement => {
                 {!selectedPoint.completed_at ? (
                   <TouchableOpacity
                     style={styles.completeButton}
-                    onPress={() => {
-                      completePickupPoint(selectedPoint.id);
-                    }}
+                    onPress={() => confirmCompletePickupPoint(selectedPoint)}
+                    disabled={completingOrderId === selectedPoint.order_id}
                   >
-                    <Text style={styles.completeButtonText}>Marcar Completado</Text>
+                    {completingOrderId === selectedPoint.order_id ? (
+                      <ActivityIndicator color={colors.white} size="small" />
+                    ) : (
+                      <Text style={styles.completeButtonText}>Marcar Completado</Text>
+                    )}
                   </TouchableOpacity>
                 ) : (
                   <View style={styles.completedBadge}>

@@ -11,12 +11,19 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import React, {ReactElement} from 'react';
+import React, {ReactElement, useEffect} from 'react';
 import {colors, fontFamily} from '../../utils/constants';
 import {useAuth} from '../../hooks/useAuth';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import LinearGradient from 'react-native-linear-gradient';
 import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+
+type RootStackParamList = {
+  InitView: undefined;
+  Tab: undefined;
+  Account: undefined;
+};
 
 /**
  * @component Account View
@@ -24,7 +31,16 @@ import {useNavigation} from '@react-navigation/native';
  */
 export const Account = (): ReactElement => {
   const {userInfo, logout, isLoading} = useAuth();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  useEffect(() => {
+    if (!isLoading && !userInfo) {
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'InitView'}],
+      });
+    }
+  }, [isLoading, userInfo, navigation]);
 
   const handleLogout = () => {
     Alert.alert(
@@ -41,8 +57,12 @@ export const Account = (): ReactElement => {
           onPress: async () => {
             try {
               await logout();
-              // La navegación se maneja automáticamente por el hook useAuth
+              navigation.reset({
+                index: 0,
+                routes: [{name: 'InitView'}],
+              });
             } catch (error) {
+              console.error('Account logout error:', error);
               Alert.alert('Error', 'No se pudo cerrar sesión');
             }
           },
@@ -62,9 +82,9 @@ export const Account = (): ReactElement => {
 
   if (!userInfo) {
     return (
-      <View style={styles.errorContainer}>
-        <Icon name="user-times" size={50} color={colors.gray} />
-        <Text style={styles.errorText}>No se pudo cargar la información del usuario</Text>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Redirigiendo al inicio de sesión...</Text>
       </View>
     );
   }
