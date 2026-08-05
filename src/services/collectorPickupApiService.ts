@@ -16,6 +16,8 @@ interface PickupPoint {
   address: string;
   notes?: string;
   completed_at: string | null;
+  state_name?: string;
+  is_picked_up?: boolean;
   user_name: string;
   user_phone?: string;
 }
@@ -46,10 +48,16 @@ interface CompletePointResponse {
   data: PickupPoint;
 }
 
+interface PickedUpPointResponse {
+  success: boolean;
+  message: string;
+  data: PickupPoint;
+}
+
 
 
 class CollectorPickupApiService {
-  private api: AxiosInstance;
+  private readonly api: AxiosInstance;
 
   constructor() {
     this.api = axios.create({
@@ -103,6 +111,20 @@ class CollectorPickupApiService {
     try {
       const response = await this.api.put<CompletePointResponse>(
         `/orders/${orderId}/complete`
+      );
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || error;
+    }
+  }
+
+  /**
+   * Marcar un punto de recogida como recogido
+   */
+  async markPickupPointAsPicked(orderId: number): Promise<PickedUpPointResponse> {
+    try {
+      const response = await this.api.put<PickedUpPointResponse>(
+        `/orders/${orderId}/picked-up`
       );
       return response.data;
     } catch (error: any) {

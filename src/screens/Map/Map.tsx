@@ -41,6 +41,8 @@ interface PickupPoint {
   address: string;
   notes?: string;
   completed_at: string | null;
+  state_name?: string;
+  is_picked_up?: boolean;
   user_name: string;
   user_phone?: string;
 }
@@ -559,6 +561,58 @@ export const MapScreen = (): ReactElement => {
     }
   };
 
+  const markPickupPointAsPicked = async (orderId: number) => {
+    setCompletingOrderId(orderId);
+
+    try {
+      const data = await collectorPickupApiService.markPickupPointAsPicked(orderId);
+      if (data.success) {
+        Alert.alert('Recogida registrada', 'La orden ahora está en estado recogida.');
+
+        setSelectedPoint((prev) => {
+          if (prev?.order_id !== orderId) {
+            return prev;
+          }
+
+          return {
+            ...prev,
+            state_name: 'Recogido',
+            is_picked_up: true,
+          };
+        });
+
+        await Promise.all([
+          fetchPickupPoints(),
+          fetchMyCollections(),
+        ]);
+      } else {
+        Alert.alert('Error', data.message || 'No se pudo marcar como recogida');
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Error al marcar el punto como recogida');
+      console.error('Error marking pickup point as picked:', err);
+    } finally {
+      setCompletingOrderId(null);
+    }
+  };
+
+  const confirmMarkPickupPointAsPicked = (point: PickupPoint) => {
+    Alert.alert(
+      'Confirmar recogida',
+      `¿Deseas marcar como recogida la orden #${point.order_id}?`,
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Sí, marcar',
+          onPress: () => markPickupPointAsPicked(point.order_id),
+        },
+      ],
+    );
+  };
+
   const confirmCompletePickupPoint = (point: PickupPoint) => {
     Alert.alert(
       'Confirmar completado',
@@ -628,15 +682,12 @@ export const MapScreen = (): ReactElement => {
     );
   };
 
-  const markArrivedAndStopTracking = () => {
-    const targetName = activeRoutePoint?.user_name || 'el punto';
-
+  const markArrivedAndStopTracking = async (point: PickupPoint) => {
     setIsTrackingRoute(false);
     setActiveRoutePoint(null);
     lastSentAtRef.current = 0;
-    setShowDetails(false);
 
-    Alert.alert('Llegada registrada', `Se dejó de enviar ubicación para ${targetName}.`);
+    await markPickupPointAsPicked(point.order_id);
   };
 
   // Animar el mapa para mostrar todos los puntos
@@ -695,7 +746,38 @@ export const MapScreen = (): ReactElement => {
     return `${point.latitude.toFixed(5)}, ${point.longitude.toFixed(5)}`;
   };
 
-  const completedCount = pickupPoints.filter(p => p.completed_at).length;
+  const isPointCompleted = (point: PickupPoint): boolean => {
+    if (point.completed_at) {
+      return true;
+    }
+
+    const stateName = point.state_name?.toLowerCase() || '';
+    return stateName.includes('finaliz') || stateName.includes('complet');
+  };
+
+  const isPointPickedUp = (point: PickupPoint): boolean => {
+    if (point.is_picked_up) {
+      return true;
+    }
+
+    const stateName = point.state_name?.toLowerCase() || '';
+    return stateName.includes('recogid');
+  };
+
+  const getPointActionLabel = (point: PickupPoint): string => (
+    isPointPickedUp(point) ? 'Marcar completado' : 'Marcar recogida'
+  );
+
+  const handlePointAction = (point: PickupPoint) => {
+    if (isPointPickedUp(point)) {
+      confirmCompletePickupPoint(point);
+      return;
+    }
+
+    confirmMarkPickupPointAsPicked(point);
+  };
+
+  const completedCount = pickupPoints.filter((point) => isPointCompleted(point)).length;
   const pendingCount = pickupPoints.length - completedCount;
 
   const getTrackingAddressText = (): string => {
@@ -708,6 +790,49 @@ export const MapScreen = (): ReactElement => {
     }
 
     return resolvedAddresses[getPointAddressKey(activeRoutePoint)] || getPointAddress(activeRoutePoint);
+  };
+
+  const renderSelectedPointActionButton = (point: PickupPoint): ReactElement => {
+    if (isPointPickedUp(point)) {
+      return (
+        <TouchableOpacity
+          style={styles.completeButton}
+          onPress={() => confirmCompletePickupPoint(point)}
+          disabled={completingOrderId === point.order_id}
+        >
+          {completingOrderId === point.order_id ? (
+            <ActivityIndicator color={colors.white} size="small" />
+          ) : (
+            <Text style={styles.completeButtonText}>Marcar completado</Text>
+          )}
+        </TouchableOpacity>
+      );
+    }
+
+    if (!isTrackingRoute || activeRoutePoint?.id !== point.id) {
+      return (
+        <TouchableOpacity
+          style={styles.startRouteButton}
+          onPress={() => requestRouteChange(point)}
+        >
+          <Text style={styles.routeButtonText}>Voy para este punto</Text>
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <TouchableOpacity
+        style={styles.arrivedButton}
+        onPress={() => markArrivedAndStopTracking(point)}
+        disabled={completingOrderId === point.order_id}
+      >
+        {completingOrderId === point.order_id ? (
+          <ActivityIndicator color={colors.white} size="small" />
+        ) : (
+          <Text style={styles.routeButtonText}>Ya llegué (marcar recogida)</Text>
+        )}
+      </TouchableOpacity>
+    );
   };
 
   useEffect(() => {
@@ -974,20 +1099,20 @@ export const MapScreen = (): ReactElement => {
                 Orden #{point.order_id}
               </Text>
 
-              {point.completed_at ? (
+              {isPointCompleted(point) ? (
                 <View style={styles.completedBadge}>
                   <Text style={styles.completedBadgeText}>✓ Completado</Text>
                 </View>
               ) : (
                 <TouchableOpacity
                   style={styles.completeButton}
-                  onPress={() => confirmCompletePickupPoint(point)}
+                  onPress={() => handlePointAction(point)}
                   disabled={completingOrderId === point.order_id}
                 >
                   {completingOrderId === point.order_id ? (
                     <ActivityIndicator color={colors.white} size="small" />
                   ) : (
-                    <Text style={styles.completeButtonText}>Marcar completado</Text>
+                    <Text style={styles.completeButtonText}>{getPointActionLabel(point)}</Text>
                   )}
                 </TouchableOpacity>
               )}
@@ -1045,39 +1170,7 @@ export const MapScreen = (): ReactElement => {
                   </View>
                 )}
 
-                {!isTrackingRoute || activeRoutePoint?.id !== selectedPoint.id ? (
-                  <TouchableOpacity
-                    style={styles.startRouteButton}
-                    onPress={() => requestRouteChange(selectedPoint)}
-                  >
-                    <Text style={styles.routeButtonText}>Voy para este punto</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.arrivedButton}
-                    onPress={markArrivedAndStopTracking}
-                  >
-                    <Text style={styles.routeButtonText}>Ya llegué (detener ubicación)</Text>
-                  </TouchableOpacity>
-                )}
-
-                {!selectedPoint.completed_at ? (
-                  <TouchableOpacity
-                    style={styles.completeButton}
-                    onPress={() => confirmCompletePickupPoint(selectedPoint)}
-                    disabled={completingOrderId === selectedPoint.order_id}
-                  >
-                    {completingOrderId === selectedPoint.order_id ? (
-                      <ActivityIndicator color={colors.white} size="small" />
-                    ) : (
-                      <Text style={styles.completeButtonText}>Marcar Completado</Text>
-                    )}
-                  </TouchableOpacity>
-                ) : (
-                  <View style={styles.completedBadge}>
-                    <Text style={styles.completedBadgeText}>✓ Completado</Text>
-                  </View>
-                )}
+                {renderSelectedPointActionButton(selectedPoint)}
               </>
             )}
 
