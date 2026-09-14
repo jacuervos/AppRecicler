@@ -5,14 +5,31 @@
  * @format
  */
 
-import React, {Fragment} from 'react';
+import React, {Fragment, useEffect} from 'react';
 import {StatusBar, SafeAreaView} from 'react-native';
 import {BottomSheetModalProvider} from '@gorhom/bottom-sheet';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import Navigation from './src/navigations/Navigation';
 import {colors} from './src/utils/constants';
+import pushNotificationService from './src/services/pushNotificationService';
 
 const App = () => {
+  useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+
+    const initializePushNotifications = async () => {
+      unsubscribe = await pushNotificationService.initialize();
+    };
+
+    initializePushNotifications();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, []);
+
   return (
     <Fragment>
       <GestureHandlerRootView style={{flex: 1}}>

@@ -57,7 +57,7 @@ const InitView = ({}) => {
     } catch (error) {
       Alert.alert(
         'Error de autenticación',
-        err instanceof Error ? err?.message : 'Error al iniciar sesión',
+        error instanceof Error ? error.message : 'Error al iniciar sesión',
       );
     }
   };
