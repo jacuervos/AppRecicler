@@ -6,6 +6,7 @@ export interface OrderTypeWaste {
   type_waste: string | null;
   weight: number;
   points: number;
+  name?: string;
 }
 
 export interface OrderState {
