@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "756446479134",
+    "project_id": "recycler-20fef",
+    "storage_bucket": "recycler-20fef.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:756446479134:android:4b290492c15983313dff0f",
+        "android_client_info": {
+          "package_name": "com.apprecicler"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDcxTCKA93mIsPX417Q5zAz8gEKFaj7ROo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

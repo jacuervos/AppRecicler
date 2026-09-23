@@ -168,6 +168,10 @@ class PushNotificationService {
 
     return this.setupListeners(listeners);
   }
+
+  async syncCurrentToken(): Promise<string | null> {
+    return this.getToken();
+  }
 }
 
 const pushNotificationService = PushNotificationService.getInstance();

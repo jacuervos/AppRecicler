@@ -85,6 +85,17 @@ class AuthApiService {
     }
   }
 
+  async updateFirebaseToken(firebaseToken: string): Promise<void> {
+    try {
+      await this.api.post('/firebase-token', {
+        firebase_token: firebaseToken,
+      });
+    } catch (error) {
+      console.error('Update firebase token error:', error);
+      throw this.handleError(error);
+    }
+  }
+
   /**
    * Get current user information
    * @returns User information
