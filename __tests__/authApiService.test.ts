@@ -113,4 +113,39 @@ describe('authApiService', () => {
     );
     expect(httpClient.get).toHaveBeenCalledWith('/auth_me');
   });
+
+  it('registers a recycler with required documents', async () => {
+    httpClient.post.mockResolvedValue({
+      data: {
+        code: 200,
+        message: 'Se ha creado el recolector correctamente',
+      },
+    });
+
+    const { authApiService } = require('../src/services/authApiService');
+
+    const response = await authApiService.register({
+      name: 'Carlos Perez',
+      phone: '3110000000',
+      identification: '900800700',
+      type_identification: 1,
+      email: 'carlos@example.com',
+      password: 'secret123',
+      password_confirmation: 'secret123',
+      images: 'file:///tmp/recycler-photo.png',
+      identification_document: 'file:///tmp/recycler-id.pdf',
+      driving_license_document: 'file:///tmp/recycler-license.pdf',
+    });
+
+    expect(response.code).toBe(200);
+    expect(httpClient.post).toHaveBeenCalledWith(
+      '/register_controller',
+      expect.any(FormData),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'Content-Type': 'multipart/form-data',
+        }),
+      })
+    );
+  });
 });

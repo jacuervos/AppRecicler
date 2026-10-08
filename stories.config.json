@@ -1,14 +1,20 @@
 {
   "frontendStories": [
     {
-      "id": "app-smoke",
-      "title": "App Render Smoke",
+      "id": "hu6-login-recolector-app",
+      "title": "HU-6 Login Recolector (AppRecicler)",
       "testPathPattern": "__tests__/App.test.tsx",
       "enabled": true
     },
     {
-      "id": "login-service",
-      "title": "Login Service",
+      "id": "hu3-registro-recolector-app",
+      "title": "HU-3 Registro Recolector (AppRecicler)",
+      "testPathPattern": "__tests__/authApiService.test.ts",
+      "enabled": true
+    },
+    {
+      "id": "hu4-preregistro-recolector-app",
+      "title": "HU-4 Preregistro Recolector (AppRecicler)",
       "testPathPattern": "__tests__/authApiService.test.ts",
       "enabled": true
     }
