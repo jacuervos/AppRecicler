@@ -1,0 +1,16 @@
+{
+  "frontendStories": [
+    {
+      "id": "app-smoke",
+      "title": "App Render Smoke",
+      "testPathPattern": "__tests__/App.test.tsx",
+      "enabled": true
+    },
+    {
+      "id": "login-service",
+      "title": "Login Service",
+      "testPathPattern": "__tests__/authApiService.test.ts",
+      "enabled": true
+    }
+  ]
+}

@@ -39,7 +39,7 @@ jobs:
           path: coverage/
 
   pages:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: test
     runs-on: ubuntu-latest
 
@@ -55,10 +55,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Generate coverage report
-        env:
-          CI: true
-        run: npm test -- --coverage --watchAll=false --passWithNoTests
+      - name: Generate story reports
+        run: |
+          node scripts/run-story-tests.js
+          node scripts/generate-story-pages-report.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -66,7 +66,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: coverage/lcov-report
+          path: report
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
