@@ -55,15 +55,11 @@ const InitView = ({}) => {
       await login(values);
       // Si el login es exitoso, navegar a la pantalla principal
       navigation.replace('Tab');
-    } catch (err) {
-      if((err instanceof Error && err?.message) === 'Actualizar contraseña') {
-        navigation.navigate('ChangePassword', {email: values.email.toLowerCase()});
-      }else {
-        Alert.alert(
-            'Error de autenticación',
-            err instanceof Error ? err?.message : 'Error al iniciar sesión',
-        );
-      }
+    } catch (error) {
+      Alert.alert(
+        'Error de autenticación',
+        error instanceof Error ? error.message : 'Error al iniciar sesión',
+      );
     }
   };
 

@@ -2,13 +2,22 @@ import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 import { colors, fontFamily } from '../utils/constants';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 interface LogoutButtonProps {
   style?: any;
 }
 
+type RootStackParamList = {
+  InitView: undefined;
+  Tab: undefined;
+  Account: undefined;
+};
+
 const LogoutButton: React.FC<LogoutButtonProps> = ({ style }) => {
   const { logout, userInfo } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const handleLogout = () => {
     Alert.alert(
@@ -25,7 +34,12 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({ style }) => {
           onPress: async () => {
             try {
               await logout();
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'InitView' }],
+              });
             } catch (error) {
+              console.error('Logout button error:', error);
               Alert.alert('Error', 'No se pudo cerrar sesión');
             }
           },

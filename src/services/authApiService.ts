@@ -16,8 +16,7 @@ class AuthApiService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL =
-      'https://ms-auth-eha5d8bchthmdtd7.centralus-01.azurewebsites.net/api';
+    this.baseURL = 'https://ms-auth-eha5d8bchthmdtd7.canadacentral-01.azurewebsites.net/api';
 
     this.api = axios.create({
       baseURL: this.baseURL,
@@ -157,6 +156,17 @@ class AuthApiService {
       console.error('Error data:', error.response?.data);
       console.error('Request URL:', error.config?.url);
       console.error('Request headers:', error.config?.headers);
+      throw this.handleError(error);
+    }
+  }
+
+  async updateFirebaseToken(firebaseToken: string): Promise<void> {
+    try {
+      await this.api.post('/firebase-token', {
+        firebase_token: firebaseToken,
+      });
+    } catch (error) {
+      console.error('Update firebase token error:', error);
       throw this.handleError(error);
     }
   }

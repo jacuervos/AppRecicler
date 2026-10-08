@@ -3,6 +3,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {AuthState, ChangePasswordCredentials, LoginCredentials, RegisterCredentials} from '../types/auth.types';
 import { authApiService } from '../services/authApiService';
+import pushNotificationService from '../services/pushNotificationService';
 
 interface AuthActions {
   // Authentication actions
@@ -77,8 +78,13 @@ const useAuthStore = create<AuthStore>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await authApiService.login(credentials);
-
+          const firebaseToken = await pushNotificationService.getToken();
+          
+          const response = await authApiService.login({
+            ...credentials,
+            firebase_token: firebaseToken,
+          });
+          
           if (response.success) {
             set({
               isAuthenticated: true,
@@ -87,6 +93,14 @@ const useAuthStore = create<AuthStore>()(
               error: null,
             });
 
+            if (firebaseToken) {
+              try {
+                await authApiService.updateFirebaseToken(firebaseToken);
+              } catch (firebaseError) {
+                console.warn('Failed to sync firebase token after login:', firebaseError);
+              }
+            }
+            
             // Get user info after successful login
             await get().getUserInfo();
           } else {
@@ -221,6 +235,15 @@ const useAuthStore = create<AuthStore>()(
             // Try to refresh user info
             try {
               await get().getUserInfo();
+
+              const firebaseToken = await pushNotificationService.getToken();
+              if (firebaseToken) {
+                try {
+                  await authApiService.updateFirebaseToken(firebaseToken);
+                } catch (firebaseError) {
+                  console.warn('Failed to sync firebase token on auth init:', firebaseError);
+                }
+              }
             } catch (error) {
               // If refresh fails, user might need to login again
               console.warn('Failed to refresh user info on app init:', error);
