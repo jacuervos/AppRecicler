@@ -1,7 +1,7 @@
 import {StyleSheet} from 'react-native';
 import {colors, fontFamily} from '../../utils/constants.tsx';
 
-const InitViewStyles = StyleSheet.create({
+const ChangePasswordStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
@@ -31,15 +31,18 @@ const InitViewStyles = StyleSheet.create({
     flexDirection: 'row',
     marginVertical: 20,
   },
-  firstTitle: {
-    color: colors.primary,
-    fontSize: 25,
+  firstTitle:{
+    color:colors.primary,
+    fontSize:25,
     fontFamily: fontFamily.fontFamilyBold,
   },
-  secondTitle: {
-    color: colors.black,
-    fontSize: 25,
-    fontFamily: fontFamily.fontFamilyBold,
+  textInfo: {
+    alignSelf: 'center',
+    marginTop: 20,
+    width: '90%',
+    fontSize: 14,
+    fontFamily: fontFamily.fontFamilyRegular,
+    color: colors.text,
   },
   textInput: {
     width: '90%',
@@ -51,26 +54,12 @@ const InitViewStyles = StyleSheet.create({
   containerButton: {
     marginTop: '15%',
     alignSelf: 'center',
-    alignItems: 'center',
+    alignItems:'center',
   },
   gradientStyles: {
     height: '40%',
     justifyContent: 'flex-end',
     alignItems: 'center',
-  },
-  textHelp: {
-    fontFamily: fontFamily.fontFamilyRegular,
-    textDecorationLine: 'underline',
-    marginTop: 10,
-    fontSize: 15,
-  },
-  textHelpForgot: {
-    fontFamily: fontFamily.fontFamilyRegular,
-    textDecorationLine: 'underline',
-    marginTop: 10,
-    fontSize: 15,
-    width: '90%',
-    alignSelf: 'center',
   },
   errorContainer: {
     backgroundColor: '#fee',
@@ -90,4 +79,4 @@ const InitViewStyles = StyleSheet.create({
   },
 });
 
-export default InitViewStyles;
+export default ChangePasswordStyles;

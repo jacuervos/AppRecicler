@@ -1,6 +1,15 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LoginCredentials, LoginResponse, UserInfoResponse } from '../types/auth.types';
+import {
+  ChangePasswordCredentials,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  LoginCredentials,
+  LoginResponse,
+  RegisterCredentials,
+  RegisterResponse,
+  UserInfoResponse,
+} from '../types/auth.types';
 
 class AuthApiService {
   private api: AxiosInstance;
@@ -13,14 +22,14 @@ class AuthApiService {
       baseURL: this.baseURL,
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
-      timeout: 10000,
+      timeout: 30000,
     });
 
     // Interceptor to add token to requests
     this.api.interceptors.request.use(
-      async (config) => {
+      async config => {
         // NO agregar token en login
         if (config.url?.includes('/login')) {
           console.log('Login request - skipping token');
@@ -33,22 +42,76 @@ class AuthApiService {
         }
         return config;
       },
-      (error) => {
+      error => {
         return Promise.reject(error);
-      }
+      },
     );
 
     // Interceptor to handle responses and errors
     this.api.interceptors.response.use(
-      (response) => response,
-      async (error) => {
+      response => response,
+      async error => {
         if (error.response?.status === 401) {
           // Token expired or invalid, clear storage
           await AsyncStorage.multiRemove(['access_token', 'user_info']);
         }
         return Promise.reject(error);
-      }
+      },
     );
+  }
+
+  /**
+   * Register user with diferents params
+   * @param credentials - Email, password, name, phone, identification, typeIdentification
+   * @returns Register response with info user
+   */
+  async register(credentials: RegisterCredentials): Promise<RegisterResponse> {
+    try {
+      const formData = new FormData();
+      formData.append('name', credentials.name);
+      formData.append('phone', credentials.phone);
+      formData.append('identification', credentials.identification);
+      formData.append('type_identification', credentials.type_identification);
+      formData.append('email', credentials.email.toLowerCase());
+      formData.append('password', credentials.password);
+      formData.append(
+        'password_confirmation',
+        credentials.password_confirmation,
+      );
+      formData.append('images', {
+        uri: credentials.images,
+        type: 'image/png',
+        name: `image_${credentials.name.replace(/\s+/g, '_')}_${
+          credentials.identification
+        }.png`,
+      });
+      formData.append('identification_document', {
+        uri: credentials.identification_document,
+        type: 'application/pdf',
+        name: `identificacion_${credentials.name.replace(/\s+/g, '_')}_${
+          credentials.identification
+        }.pdf`,
+      });
+      formData.append('driving_license_document', {
+        uri: credentials.driving_license_document,
+        type: 'application/pdf',
+        name: `licencia_${credentials.name.replace(/\s+/g, '_')}_${
+          credentials.identification
+        }.pdf`,
+      });
+      const response: AxiosResponse<RegisterResponse> = await this.api.post(
+        '/register_controller',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+      return response.data;
+    } catch (error: any) {
+      throw this.handleError(error);
+    }
   }
 
   /**
@@ -61,16 +124,28 @@ class AuthApiService {
       console.log('=== LOGIN DEBUG ===');
       console.log('Base URL:', this.baseURL);
       console.log('Full URL:', `${this.baseURL}/login`);
-      console.log('Credentials:', { email: credentials.email, password: credentials.password});
+      console.log('Credentials:', {
+        email: credentials.email.toLowerCase(),
+        password: credentials.password,
+      });
 
-      const response: AxiosResponse<LoginResponse> = await this.api.post('/login', credentials);
+      const response: AxiosResponse<LoginResponse> = await this.api.post(
+        '/login',
+        {
+          email: credentials.email.toLowerCase(),
+          password: credentials.password,
+        },
+      );
 
       console.log('Response status:', response.status);
       console.log('Response data:', response.data);
 
       // Save token to AsyncStorage
       if (response.data.success && response.data.data.access_token) {
-        await AsyncStorage.setItem('access_token', response.data.data.access_token);
+        await AsyncStorage.setItem(
+          'access_token',
+          response.data.data.access_token,
+        );
         console.log('Token guardado exitosamente');
       }
 
@@ -102,11 +177,16 @@ class AuthApiService {
    */
   async getUserInfo(): Promise<UserInfoResponse> {
     try {
-      const response: AxiosResponse<UserInfoResponse> = await this.api.get('/auth_me');
-      
+      const response: AxiosResponse<UserInfoResponse> = await this.api.get(
+        '/auth_me',
+      );
+
       // Save user info to AsyncStorage
       if (response.data.success && response.data.data) {
-        await AsyncStorage.setItem('user_info', JSON.stringify(response.data.data));
+        await AsyncStorage.setItem(
+          'user_info',
+          JSON.stringify(response.data.data),
+        );
       }
 
       return response.data;
@@ -170,6 +250,60 @@ class AuthApiService {
   }
 
   /**
+   * Send forgot password email
+   * @returns Response indicating if email was sent
+   * @param request
+   */
+  async forgotPassword(
+    request: ForgotPasswordRequest,
+  ): Promise<ForgotPasswordResponse> {
+    try {
+      const response: AxiosResponse<ForgotPasswordResponse> =
+        await this.api.post('/send_code', request);
+      return response.data;
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Validate Code
+   * @param code - Code to validate
+   * @returns message string
+   */
+  async validateCode(code: string): Promise<string> {
+    try {
+      const response: AxiosResponse<RegisterResponse> = await this.api.post(
+        '/validate_code',
+        {code: code},
+      );
+      return response.data?.message;
+    } catch (error: any) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Change Password
+   * @param credentials - Email, password, code, password_confirmation
+   * @returns message string
+   */
+  async changePassword(
+    credentials: ChangePasswordCredentials,
+  ): Promise<string> {
+    try {
+      const response: AxiosResponse<RegisterResponse> = await this.api.post(
+        '/change_password',
+        credentials,
+      );
+      return response.data?.message;
+    } catch (error: any) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
    * Handle API errors
    * @param error - Error from API call
    * @returns formatted error message
@@ -177,11 +311,15 @@ class AuthApiService {
   private handleError(error: any): Error {
     if (error.response) {
       // Server responded with error status
-      const message = error.response.data?.message || `Error ${error.response.status}: ${error.response.statusText}`;
+      const message =
+        error.response.data?.message ||
+        `Error ${error.response.status}: ${error.response.statusText}`;
       return new Error(message);
     } else if (error.request) {
       // Request was made but no response received
-      return new Error('No se pudo conectar con el servidor. Verifica tu conexión a internet.');
+      return new Error(
+        'No se pudo conectar con el servidor. Verifica tu conexión a internet.',
+      );
     } else {
       // Something else happened
       return new Error(error.message || 'Ocurrió un error inesperado');

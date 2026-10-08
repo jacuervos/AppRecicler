@@ -1,21 +1,24 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AuthState, LoginCredentials, UserInfo } from '../types/auth.types';
+import {AuthState, ChangePasswordCredentials, LoginCredentials, RegisterCredentials} from '../types/auth.types';
 import { authApiService } from '../services/authApiService';
 import pushNotificationService from '../services/pushNotificationService';
 
 interface AuthActions {
   // Authentication actions
   login: (credentials: LoginCredentials) => Promise<void>;
+  register: (credentials: RegisterCredentials) => Promise<void>;
+  validateCode: (code: string) => Promise<void>;
+  changePassword: (credentials: ChangePasswordCredentials) => Promise<void>;
   logout: () => Promise<void>;
   getUserInfo: () => Promise<void>;
-  
+
   // State management actions
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
-  
+
   // Initialize app - check for stored auth data
   initializeAuth: () => Promise<void>;
 }
@@ -43,6 +46,32 @@ const useAuthStore = create<AuthStore>()(
 
       clearError: () => {
         set({ error: null });
+      },
+
+      register: async (credentials: RegisterCredentials) => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await authApiService.register(credentials);
+
+          if (response.code === 200) {
+            // Post Login
+            let values = {
+              email: credentials.email,
+              password: credentials.password,
+            };
+            await get().login(values);
+          } else {
+            throw new Error(response.message || 'Error en el registro');
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Error de conexión';
+          set({
+            isLoading: false,
+            error: errorMessage,
+          });
+          throw error;
+        }
       },
 
       login: async (credentials: LoginCredentials) => {
@@ -90,12 +119,54 @@ const useAuthStore = create<AuthStore>()(
         }
       },
 
+      validateCode: async (code: string) => {
+        try {
+          set({ isLoading: true, error: null });
+
+         const response = await authApiService.validateCode(code);
+          if (response === 'Código valido, ahora cambia la contraseña') {
+            set({ isLoading: false });
+          } else {
+            set({ isLoading: false, error: response });
+            throw new Error(response || 'Error en el servidor');
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Error de conexión';
+          set({
+            isLoading: false,
+            error: errorMessage,
+          });
+          throw error;
+        }
+      },
+
+      changePassword: async (credentials: ChangePasswordCredentials) => {
+        try {
+          set({ isLoading: true, error: null });
+
+          const response = await authApiService.changePassword(credentials);
+          if (response === 'Contraseña cambiada ya puede iniciar sesión.') {
+            set({ isLoading: false });
+          } else {
+            set({ isLoading: false, error: response });
+            throw new Error(response || 'Error en el servidor');
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Error de conexión';
+          set({
+            isLoading: false,
+            error: errorMessage,
+          });
+          throw error;
+        }
+      },
+
       getUserInfo: async () => {
         try {
           set({ isLoading: true, error: null });
-          
+
           const response = await authApiService.getUserInfo();
-          
+
           if (response.success) {
             set({
               userInfo: response.data,
@@ -112,12 +183,12 @@ const useAuthStore = create<AuthStore>()(
             isLoading: false,
             error: errorMessage,
           });
-          
+
           // If error is 401, logout user
           if (error instanceof Error && error.message.includes('401')) {
             await get().logout();
           }
-          
+
           throw error;
         }
       },
@@ -125,9 +196,9 @@ const useAuthStore = create<AuthStore>()(
       logout: async () => {
         try {
           set({ isLoading: true, error: null });
-          
+
           await authApiService.logout();
-          
+
           set({
             isAuthenticated: false,
             token: null,
@@ -147,11 +218,11 @@ const useAuthStore = create<AuthStore>()(
       initializeAuth: async () => {
         try {
           set({ isLoading: true, error: null });
-          
+
           const isAuthenticated = await authApiService.isAuthenticated();
           const storedToken = await authApiService.getStoredToken();
           const storedUserInfo = await authApiService.getStoredUserInfo();
-          
+
           if (isAuthenticated && storedToken) {
             set({
               isAuthenticated: true,
@@ -160,7 +231,7 @@ const useAuthStore = create<AuthStore>()(
               isLoading: false,
               error: null,
             });
-            
+
             // Try to refresh user info
             try {
               await get().getUserInfo();

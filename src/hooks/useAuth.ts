@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import useAuthStore from '../store/authStore';
-import { LoginCredentials } from '../types/auth.types';
+import {ChangePasswordCredentials, LoginCredentials, RegisterCredentials} from '../types/auth.types';
 
 /**
  * Custom hook for authentication operations
@@ -14,9 +14,12 @@ export const useAuth = () => {
     userInfo,
     isLoading,
     error,
-    
+
     // Actions
     login,
+    register,
+    validateCode,
+    changePassword,
     logout,
     getUserInfo,
     setLoading,
@@ -29,6 +32,18 @@ export const useAuth = () => {
   useEffect(() => {
     initializeAuth();
   }, []);
+
+  /**
+   * Register with credentials
+   */
+  const handleRegister = async (credentials: RegisterCredentials) => {
+    try {
+      await register(credentials);
+    } catch (error) {
+      // Error is already handled in the store
+      throw error;
+    }
+  };
 
   /**
    * Login with credentials
@@ -98,6 +113,30 @@ export const useAuth = () => {
     };
   };
 
+  /**
+   * Validate Code with credentials
+   */
+  const handleValidateCode = async (code: string) => {
+    try {
+      await validateCode(code);
+    } catch (error) {
+      // Error is already handled in the store
+      throw error;
+    }
+  };
+
+  /**
+   * Change password with credentials
+   */
+  const handleChangePassword = async (values: ChangePasswordCredentials) => {
+    try {
+      await changePassword(values);
+    } catch (error) {
+      // Error is already handled in the store
+      throw error;
+    }
+  };
+
   return {
     // State
     isAuthenticated,
@@ -105,13 +144,16 @@ export const useAuth = () => {
     userInfo,
     isLoading,
     error,
-    
+
     // Actions
     login: handleLogin,
+    register: handleRegister,
     logout: handleLogout,
+    validateCode: handleValidateCode,
+    changePassword: handleChangePassword,
     refreshUserInfo,
     clearError,
-    
+
     // Utility functions
     hasRole,
     isUserEnabled,

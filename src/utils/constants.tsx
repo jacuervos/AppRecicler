@@ -40,11 +40,11 @@ export const fontFamily = {
     fontFamilyBlack:'Nunito-Black',
     fontFamilyBlackItalic:'Nunito-BlackItalic',
     fontFamilyBold:'Nunito-Bold',
-    fontFamilyBoldItalic:'Nunito-BoldItalic', 
-    fontFamilyItalic:'Nunito-Italic', 
+    fontFamilyBoldItalic:'Nunito-BoldItalic',
+    fontFamilyItalic:'Nunito-Italic',
     fontFamilyLight:'Nunito-Light',
-    fontFamilyLightItalic:'Nunito-LightItalic',  
+    fontFamilyLightItalic:'Nunito-LightItalic',
     fontFamilyRegular:'Nunito-Regular',
     fontFamilySemiBold:'Nunito-SemiBold',
     fontFamilySemiBoldItalic:'Nunito-SemiBoldItalic',
-}
+};

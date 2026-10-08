@@ -11,7 +11,7 @@ export const Header: React.FC<IHeader> = ({action}) => {
       <Text style={headerStyles.title}>Hola {userInfo?.name ?? 'Usuario'}</Text>
       <Pressable onPress={action}>
         <Image
-          source={require('../../../assets/images/login.png')}
+          source={userInfo?.photo ? {uri: userInfo.photo} : require('../../../assets/images/login.png')}
           style={headerStyles.image}
         />
       </Pressable>

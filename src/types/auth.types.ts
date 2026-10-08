@@ -48,3 +48,41 @@ export interface AuthState {
   isLoading: boolean;
   error: string | null;
 }
+
+// Types for register credentials
+export interface RegisterCredentials {
+  email: string;
+  password: string;
+  password_confirmation: string;
+  name: string;
+  phone: string;
+  identification: string;
+  type_identification: number;
+  images: string;
+  identification_document: string;
+  driving_license_document: string;
+}
+
+// Types for API responses
+export interface RegisterResponse {
+  code: number;
+  message: string;
+}
+
+// Types for password reset
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+// Types for Change Password credentials
+export interface ChangePasswordCredentials {
+  code: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}
