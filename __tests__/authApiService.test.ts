@@ -148,4 +148,46 @@ describe('authApiService', () => {
       })
     );
   });
+
+  it('sends a password recovery email to the recycler', async () => {
+    httpClient.post.mockResolvedValue({
+      data: {
+        success: true,
+        message: 'Código enviado',
+      },
+    });
+
+    const { authApiService } = require('../src/services/authApiService');
+
+    const response = await authApiService.forgotPassword({ email: 'carlos@example.com' });
+
+    expect(response.success).toBe(true);
+    expect(httpClient.post).toHaveBeenCalledWith('/send_code', { email: 'carlos@example.com' });
+  });
+
+  it('changes the recycler password using a valid recovery code', async () => {
+    httpClient.post.mockResolvedValue({
+      data: {
+        success: true,
+        message: 'Contraseña actualizada',
+      },
+    });
+
+    const { authApiService } = require('../src/services/authApiService');
+
+    const response = await authApiService.changePassword({
+      email: 'carlos@example.com',
+      code: '654321',
+      password: 'NuevaPass123',
+      password_confirmation: 'NuevaPass123',
+    });
+
+    expect(response).toBe('Contraseña actualizada');
+    expect(httpClient.post).toHaveBeenCalledWith('/change_password', {
+      email: 'carlos@example.com',
+      code: '654321',
+      password: 'NuevaPass123',
+      password_confirmation: 'NuevaPass123',
+    });
+  });
 });

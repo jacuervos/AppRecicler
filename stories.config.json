@@ -4,18 +4,28 @@
       "id": "hu6-login-recolector-app",
       "title": "HU-6 Login Recolector (AppRecicler)",
       "testPathPattern": "__tests__/App.test.tsx",
+      "sprint": 1,
       "enabled": true
     },
     {
       "id": "hu3-registro-recolector-app",
       "title": "HU-3 Registro Recolector (AppRecicler)",
       "testPathPattern": "__tests__/authApiService.test.ts",
+      "sprint": 1,
       "enabled": true
     },
     {
       "id": "hu4-preregistro-recolector-app",
       "title": "HU-4 Preregistro Recolector (AppRecicler)",
       "testPathPattern": "__tests__/authApiService.test.ts",
+      "sprint": 1,
+      "enabled": true
+    },
+    {
+      "id": "hu14-recuperar-contrasena-recolector-app",
+      "title": "HU-14 Recuperar contraseña recolector",
+      "testPathPattern": "__tests__/authApiService.test.ts",
+      "sprint": 2,
       "enabled": true
     }
   ]
