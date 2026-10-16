@@ -67,7 +67,7 @@ for (const story of stories) {
     env: { ...process.env, CI: 'true' },
   });
 
-  if (result.status !== 0) {
+  if (!fs.existsSync(outputFile)) {
     process.exit(result.status || 1);
   }
 

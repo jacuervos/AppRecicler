@@ -27,6 +27,20 @@
       "testPathPattern": "__tests__/authApiService.test.ts",
       "sprint": 2,
       "enabled": true
+    },
+    {
+      "id": "hu22-visualizacion-ruta-app",
+      "title": "HU-22 Visualización de ruta",
+      "testPathPattern": "__tests__/collectorPickupApiService.test.ts",
+      "sprint": 3,
+      "enabled": true
+    },
+    {
+      "id": "hu24-confirmacion-recogida-app",
+      "title": "HU-24 Confirmación de recogida",
+      "testPathPattern": "__tests__/collectorPickupApiService.test.ts",
+      "sprint": 3,
+      "enabled": true
     }
   ]
 }
