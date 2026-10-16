@@ -29,8 +29,13 @@ const passRate = totals.total > 0 ? Math.round((totals.passed / totals.total) * 
 const sprintCardsHtml = (summary.sprints || []).map((sprintGroup) => {
   const sprintStoriesHtml = (sprintGroup.stories || []).map((story) => `
     <li>
-      <span>${story.title}</span>
-      <strong>${story.passed}/${story.total} passed</strong>
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%;">
+        <span>${story.title}</span>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <strong>${story.passed}/${story.total} passed</strong>
+          <a href="${story.coveragePath}" target="_blank" style="color:#1d4ed8; text-decoration:none; font-weight:700;">Coverage</a>
+        </div>
+      </div>
     </li>
   `).join('');
 
