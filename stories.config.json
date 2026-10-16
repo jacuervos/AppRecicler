@@ -41,6 +41,13 @@
       "testPathPattern": "__tests__/collectorPickupApiService.test.ts",
       "sprint": 3,
       "enabled": true
+    },
+    {
+      "id": "hu27-historial-ordenes-recolector-app",
+      "title": "HU-27 Historial de ordenes recolector",
+      "testPathPattern": "__tests__/orderApiService.test.ts",
+      "sprint": 4,
+      "enabled": true
     }
   ]
 }
