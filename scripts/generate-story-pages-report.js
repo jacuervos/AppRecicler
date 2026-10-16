@@ -26,77 +26,86 @@ const totals = stories.reduce(
 
 const passRate = totals.total > 0 ? Math.round((totals.passed / totals.total) * 100) : 100;
 
-const storyCards = stories
-  .map((story) => {
-    const statusClass = story.failed > 0 ? 'warning' : 'good';
-    const statusLabel = story.failed > 0 ? 'Needs attention' : 'Healthy';
+const sprintCardsHtml = (summary.sprints || []).map((sprintGroup) => {
+  const sprintStoriesHtml = (sprintGroup.stories || []).map((story) => `
+    <li>
+      <span>${story.title}</span>
+      <strong>${story.passed}/${story.total} passed</strong>
+    </li>
+  `).join('');
 
-    return `
-      <article class="card">
-        <div>
-          <h3>${story.title}</h3>
-          <p class="meta">ID: ${story.id}</p>
-          <p class="meta">Pattern: ${story.testPathPattern}</p>
-        </div>
-        <div class="stats">
-          <span>${story.passed}/${story.total} passed</span>
-          <span>${story.failed} failed</span>
-          <span>${story.skipped} skipped</span>
-        </div>
-        <div class="row">
-          <span class="chip ${statusClass}">${statusLabel}</span>
-          <a class="btn" href="${story.coveragePath}">Open coverage</a>
-        </div>
-      </article>
-    `;
-  })
-  .join('\n');
+  return `
+    <section class="sprint-panel">
+      <div class="sprint-header">
+        <h2>Sprint ${sprintGroup.sprint}</h2>
+        <span class="pill">${(sprintGroup.stories || []).length} historias</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric"><small>Total</small><br><b>${sprintGroup.total}</b></div>
+        <div class="metric"><small>Passed</small><br><b>${sprintGroup.passed}</b></div>
+        <div class="metric"><small>Failed</small><br><b>${sprintGroup.failed}</b></div>
+        <div class="metric"><small>Skipped</small><br><b>${sprintGroup.skipped}</b></div>
+      </div>
+      <ul class="story-list">${sprintStoriesHtml}</ul>
+    </section>
+  `;
+}).join('');
 
 const html = `<!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>AppRecicler Story Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Story Report by Sprint</title>
   <style>
-    :root { --g:#2e7d32; --g2:#4caf50; --bg:#f5fbf5; --text:#1f2937; --muted:#6b7280; }
-    body { margin:0; font-family: Nunito, Arial, sans-serif; color:var(--text); background:linear-gradient(180deg,#f8fff8 0,#eef8ef 100%); }
-    .wrap { max-width:1100px; margin:0 auto; padding:28px 16px 40px; }
-    .hero { background:#fff; border:1px solid #d9edd9; border-radius:20px; padding:22px; box-shadow:0 10px 28px rgba(46,125,50,.1); }
-    h1 { margin:0 0 8px; }
-    .muted { color:var(--muted); margin:0; }
-    .grid { margin-top:16px; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
-    .metric { background:#fff; border:1px solid #d9edd9; border-radius:14px; padding:12px; }
-    .metric b { font-size:1.25rem; }
-    .stories { margin-top:16px; display:grid; gap:12px; }
-    .card { background:#fff; border:1px solid #d9edd9; border-radius:16px; padding:14px; display:grid; gap:8px; }
-    .card h3 { margin:0; }
-    .meta { margin:0; color:var(--muted); font-size:.92rem; }
-    .stats { display:flex; gap:12px; flex-wrap:wrap; font-weight:700; }
-    .row { display:flex; justify-content:space-between; align-items:center; gap:10px; }
-    .chip { padding:6px 10px; border-radius:999px; font-weight:800; font-size:.84rem; }
-    .chip.good { background:rgba(76,175,80,.16); color:#1e7e34; }
-    .chip.warning { background:rgba(255,152,0,.16); color:#b76a00; }
-    .btn { text-decoration:none; color:white; background:linear-gradient(135deg,var(--g),var(--g2)); padding:8px 12px; border-radius:10px; font-weight:800; }
-    @media (max-width: 800px) { .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-    @media (max-width: 520px) { .grid { grid-template-columns:1fr; } .row { flex-direction:column; align-items:flex-start; } }
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #1f2937; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .hero { background: linear-gradient(135deg, #1d4ed8, #2563eb); color: white; padding: 24px; border-radius: 18px; margin-bottom: 20px; }
+    .hero h1 { margin: 0 0 8px; }
+    .meta { opacity: 0.9; margin: 0; }
+    .overview { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0 20px; }
+    .card, .sprint-panel { background: white; border-radius: 14px; padding: 16px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08); }
+    .card { text-align: center; }
+    .card small { color: #6b7280; }
+    .card b { font-size: 1.7rem; display: block; margin-top: 6px; }
+    .sprint-panel { margin-bottom: 18px; }
+    .sprint-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .sprint-header h2 { margin: 0; }
+    .pill { background: #e0ecff; color: #1d4ed8; padding: 6px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+    .metric { background: #f8fafc; border-radius: 10px; padding: 12px; text-align: center; }
+    .metric small { color: #6b7280; }
+    .metric b { display: block; margin-top: 5px; }
+    .story-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+    .story-list li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 8px; background: #f8fafc; }
+    @media (max-width: 700px) { .overview, .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   </style>
 </head>
 <body>
   <div class="wrap">
     <section class="hero">
-      <h1>AppRecicler - Story Report</h1>
-      <p class="muted">Generated at ${summary.generatedAt}</p>
-      <div class="grid">
-        <div class="metric"><small>Total tests</small><br><b>${totals.total}</b></div>
-        <div class="metric"><small>Passed</small><br><b>${totals.passed}</b></div>
-        <div class="metric"><small>Failed</small><br><b>${totals.failed}</b></div>
-        <div class="metric"><small>Pass rate</small><br><b>${passRate}%</b></div>
-      </div>
+      <h1>Reporte de historias por sprint</h1>
+      <p class="meta">Generado: ${summary.generatedAt}</p>
     </section>
-    <section class="stories">
-      ${storyCards}
-    </section>
+
+    <div class="overview">
+      <div class="card"><small>Historias</small><b>${stories.length}</b></div>
+      <div class="card"><small>Passed</small><b>${totals.passed}</b></div>
+      <div class="card"><small>Failed</small><b>${totals.failed}</b></div>
+      <div class="card"><small>Skipped</small><b>${totals.skipped}</b></div>
+    </div>
+
+    ${sprintCardsHtml || `
+      <section class="sprint-panel">
+        <div class="sprint-header">
+          <h2>Historias</h2>
+          <span class="pill">${stories.length} historias</span>
+        </div>
+        <ul class="story-list">
+          ${stories.map((story) => `<li><span>${story.title}</span><strong>${story.passed}/${story.total} passed</strong></li>`).join('')}
+        </ul>
+      </section>
+    `}
   </div>
 </body>
 </html>`;
