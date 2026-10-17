@@ -8,16 +8,9 @@
       "enabled": true
     },
     {
-      "id": "hu3-registro-recolector-app",
-      "title": "HU-3 Registro Recolector (AppRecicler)",
-      "testPathPattern": "__tests__/authApiService.test.ts",
-      "sprint": 1,
-      "enabled": true
-    },
-    {
       "id": "hu4-preregistro-recolector-app",
       "title": "HU-4 Preregistro Recolector (AppRecicler)",
-      "testPathPattern": "__tests__/authApiService.test.ts",
+      "testPathPattern": "__tests__/register/Register.test.tsx",
       "sprint": 1,
       "enabled": true
     },
