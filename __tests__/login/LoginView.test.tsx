@@ -298,4 +298,105 @@ describe('InitView', () => {
       component.unmount();
     });
   });
+
+
+  it('muestra un error genérico cuando el login falla con un error no estándar', async () => {
+    jest.useFakeTimers();
+
+    const loginError = jest.fn().mockRejectedValue('error desconocido');
+    const clearErrorMock = jest.fn();
+    const alertSpy = jest.spyOn(Alert, 'alert');
+
+    (useAuth as jest.Mock).mockReturnValue({
+      login: loginError,
+      isLoading: false,
+      isAuthenticated: false,
+      error: null,
+      clearError: clearErrorMock,
+    });
+
+    let component!: TestRenderer.ReactTestRenderer;
+
+    await act(async () => {
+      component = TestRenderer.create(<InitView />);
+    });
+
+    // Esperar a que termine la verificación de sesión.
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    // Ingresar las credenciales.
+    act(() => {
+      component.root
+        .findByProps({testID: 'email'})
+        .props.onChangeText('carlos@example.com');
+
+      component.root
+        .findByProps({testID: 'password'})
+        .props.onChangeText('secret123');
+    });
+
+    // Pulsar el botón de inicio de sesión.
+    await act(async () => {
+      component.root.findByProps({testID: 'login-button'}).props.onPress();
+    });
+
+    expect(clearErrorMock).toHaveBeenCalled();
+    expect(loginError).toHaveBeenCalledWith({
+      email: 'carlos@example.com',
+      password: 'secret123',
+    });
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      'Error de autenticación',
+      'Error al iniciar sesión',
+    );
+
+    alertSpy.mockRestore();
+
+    act(() => {
+      component.unmount();
+    });
+  });
+
+
+
+
+  it('muestra "Iniciando..." y deshabilita el botón mientras carga', async () => {
+    jest.useFakeTimers();
+
+    (useAuth as jest.Mock).mockReturnValue({
+      login: jest.fn(),
+      isLoading: true,
+      isAuthenticated: false,
+      error: null,
+      clearError: jest.fn(),
+    });
+
+    let component!: TestRenderer.ReactTestRenderer;
+
+    await act(async () => {
+      component = TestRenderer.create(<InitView />);
+    });
+
+    // Finalizar la verificación inicial de sesión.
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    const loginButton = component.root.findByProps({
+      testID: 'login-button',
+    });
+
+    expect(loginButton.props.disabled).toBe(true);
+
+    expect(loginButton.findByType(Text).props.children).toBe('Iniciando...');
+
+    act(() => {
+      component.unmount();
+    });
+
+    jest.useRealTimers();
+  });
 });
