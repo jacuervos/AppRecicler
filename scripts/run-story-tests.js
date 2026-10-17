@@ -68,7 +68,8 @@ for (const story of stories) {
     env: { ...process.env, CI: 'true' },
   });
 
-  if (!fs.existsSync(outputFile)) {
+  if (result.status !== 0 || !fs.existsSync(outputFile)) {
+    console.error(`Story ${story.id} failed tests or 80% minimum coverage threshold.`);
     process.exit(result.status || 1);
   }
 
