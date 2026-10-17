@@ -31,16 +31,6 @@ describe('orderApiService (Sprint 4 - AppRecicler)', () => {
           { id: 1, type_waste_id: 1, name: 'Vidrio', weight: 4.5, points: 45 },
         ],
       },
-      {
-        id: 29,
-        latitude: 4.63,
-        longitude: -74.08,
-        date: '2026-10-20',
-        state: { id: 2, name: 'Asignada a recolector', color: 'purple' },
-        type_waste: [
-          { id: 2, type_waste_id: 2, name: 'Cartón', weight: 3.0, points: 30 },
-        ],
-      },
     ];
 
     mockFetch.mockResolvedValue({
@@ -52,7 +42,7 @@ describe('orderApiService (Sprint 4 - AppRecicler)', () => {
 
     const result = await orderApiService.getMyCollections();
 
-    expect(result).toHaveLength(2);
+    expect(result).toHaveLength(1);
     expect(result[0].id).toBe(31);
     expect(result[0].state.name).toBe('Orden finalizada');
     expect(mockFetch).toHaveBeenCalledWith(
@@ -63,19 +53,48 @@ describe('orderApiService (Sprint 4 - AppRecicler)', () => {
           Authorization: 'Bearer recycler-jwt-token',
           Accept: 'application/json',
         }),
-      })
+      }),
     );
   });
 
   it('HU-27: throws an error when fetching collector order history fails', async () => {
-    mockFetch.mockResolvedValue({
+    mockFetch.mockResolvedValueOnce({
       ok: false,
+      json: async () => ({}),
+    });
+
+    await expect(orderApiService.getMyCollections()).rejects.toThrow(
+      'Error al obtener las colecciones',
+    );
+  });
+
+  it('accepts an order and handles failure when accepting order', async () => {
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(null);
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
       json: async () => ({
-        message: 'Error al obtener las colecciones',
+        success: true,
+        order_id: 31,
       }),
     });
 
-    await expect(orderApiService.getMyCollections()).rejects.toThrow('Error al obtener las colecciones');
+    const accepted = await orderApiService.acceptOrder(31);
+    expect(accepted.success).toBe(true);
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('/orders/31/accept'),
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({
+          Authorization: '',
+        }),
+      }),
+    );
+
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({}),
+    });
+
+    await expect(orderApiService.acceptOrder(31)).rejects.toThrow('Error al aceptar la orden');
   });
 });
-

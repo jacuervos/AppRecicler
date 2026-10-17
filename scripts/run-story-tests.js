@@ -52,6 +52,7 @@ for (const story of stories) {
     'test',
     '--',
     '--watchAll=false',
+    '--watchman=false',
     '--passWithNoTests',
     '--coverage',
     '--runInBand',
