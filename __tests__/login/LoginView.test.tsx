@@ -1,0 +1,301 @@
+import React from 'react';
+import TestRenderer, {act} from 'react-test-renderer';
+import {Alert, Text, TouchableOpacity} from 'react-native';
+
+// Simular AsyncStorage.
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);
+
+// Simular el hook que utiliza InitView.
+jest.mock('../../src/hooks/useAuth', () => ({
+  useAuth: jest.fn(),
+}));
+
+// Simular navegación.
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: jest.fn(),
+}));
+
+// Simular el fondo degradado.
+jest.mock('react-native-linear-gradient', () => {
+  const React = require('react');
+  const {View} = require('react-native');
+
+  return ({children}: any) => React.createElement(View, null, children);
+});
+
+// Simular el servicio de notificaciones.
+jest.mock('../../src/services/pushNotificationService', () => ({
+  __esModule: true,
+  default: {
+    requestPermission: jest.fn(),
+    getToken: jest.fn(),
+    onMessage: jest.fn(),
+    onNotificationOpenedApp: jest.fn(),
+    getInitialNotification: jest.fn(),
+    registerDevice: jest.fn(),
+    setupNotifications: jest.fn(),
+  },
+}));
+
+// Simular campos de texto.
+jest.mock('../../src/components/textInput/PrincipalTextInput.tsx', () => {
+  const React = require('react');
+  const {TextInput} = require('react-native');
+
+  return {
+    PrincipalTextInput: ({value, valueChange, change, label}: any) =>
+      React.createElement(TextInput, {
+        testID: valueChange,
+        value,
+        placeholder: label,
+        onChangeText: (text: string) => change(valueChange, text),
+      }),
+  };
+});
+
+// Simular botón principal.
+jest.mock('../../src/components/buttons/PrimaryButton.tsx', () => {
+  const React = require('react');
+  const {TouchableOpacity, Text} = require('react-native');
+
+  return {
+    PrimaryButton: ({text, action, disabled}: any) =>
+      React.createElement(
+        TouchableOpacity,
+        {
+          testID: 'login-button',
+          disabled,
+          onPress: action,
+        },
+        React.createElement(Text, null, text),
+      ),
+  };
+});
+
+import InitView from '../../src/screens/InitView/InitView';
+import {useAuth} from '../../src/hooks/useAuth';
+import {useNavigation} from '@react-navigation/native';
+
+describe('InitView', () => {
+  const login = jest.fn();
+  const clearError = jest.fn();
+  const navigate = jest.fn();
+  const replace = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    (useAuth as jest.Mock).mockReturnValue({
+      login,
+      isLoading: false,
+      error: null,
+      isAuthenticated: false,
+      clearError,
+    });
+
+    (useNavigation as jest.Mock).mockReturnValue({
+      navigate,
+      replace,
+    });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('muestra el indicador de verificación de sesión', () => {
+    let component!: TestRenderer.ReactTestRenderer;
+
+    act(() => {
+      component = TestRenderer.create(<InitView />);
+    });
+
+    expect(
+      component.root.findByProps({
+        children: 'Verificando sesión...',
+      }),
+    ).toBeTruthy();
+
+    act(() => {
+      component.unmount();
+    });
+  });
+
+  it('redirige a Tab cuando el usuario ya está autenticado', async () => {
+    jest.useFakeTimers();
+
+    (useAuth as jest.Mock).mockReturnValue({
+      login,
+      isLoading: false,
+      error: null,
+      isAuthenticated: true,
+      clearError,
+    });
+
+    let component!: TestRenderer.ReactTestRenderer;
+
+    await act(async () => {
+      component = TestRenderer.create(<InitView />);
+    });
+
+    // Ejecutar el temporizador de inicialización.
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(useAuth).toHaveBeenCalled();
+    expect(replace).toHaveBeenCalledWith('Tab');
+
+    act(() => {
+      component.unmount();
+    });
+  });
+
+  it('muestra el formulario cuando el usuario no está autenticado', async () => {
+    jest.useFakeTimers();
+
+    let component!: TestRenderer.ReactTestRenderer;
+
+    await act(async () => {
+      component = TestRenderer.create(<InitView />);
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    expect(
+      component.root.findByProps({
+        children: 'Iniciar sesión',
+      }),
+    ).toBeTruthy();
+
+    expect(
+      component.root.findByProps({
+        testID: 'email',
+      }),
+    ).toBeTruthy();
+
+    act(() => {
+      component.unmount();
+    });
+  });
+
+  it('navega a la pantalla de recuperación de contraseña', async () => {
+    jest.useFakeTimers();
+
+    let component!: TestRenderer.ReactTestRenderer;
+
+    await act(async () => {
+      component = TestRenderer.create(<InitView />);
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    const forgotButton = component.root.find(
+      node =>
+        node.type === TouchableOpacity &&
+        node
+          .findAllByType(Text)
+          .some(
+            textNode => textNode.props.children === '¿Olvidaste tu contraseña?',
+          ),
+    );
+
+    act(() => {
+      forgotButton.props.onPress();
+    });
+
+    expect(navigate).toHaveBeenCalledWith('ForgotPassword');
+
+    act(() => {
+      component.unmount();
+    });
+  });
+
+  it('limpia los errores y llama al login con las credenciales', async () => {
+    jest.useFakeTimers();
+    login.mockResolvedValueOnce(undefined);
+
+    let component!: TestRenderer.ReactTestRenderer;
+
+    await act(async () => {
+      component = TestRenderer.create(<InitView />);
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    const email = component.root.findByProps({testID: 'email'});
+    const password = component.root.findByProps({testID: 'password'});
+
+    act(() => {
+      email.props.onChangeText('carlos@example.com');
+      password.props.onChangeText('secret123');
+    });
+
+    await act(async () => {
+      component.root.findByProps({testID: 'login-button'}).props.onPress();
+    });
+
+    expect(clearError).toHaveBeenCalled();
+
+    expect(login).toHaveBeenCalledWith({
+      email: 'carlos@example.com',
+      password: 'secret123',
+    });
+
+    expect(replace).toHaveBeenCalledWith('Tab');
+
+    act(() => {
+      component.unmount();
+    });
+  });
+
+  it('muestra una alerta si falla el inicio de sesión', async () => {
+    jest.useFakeTimers();
+
+    const alertSpy = jest.spyOn(Alert, 'alert');
+    login.mockRejectedValueOnce(new Error('Credenciales inválidas'));
+
+    let component!: TestRenderer.ReactTestRenderer;
+
+    await act(async () => {
+      component = TestRenderer.create(<InitView />);
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    act(() => {
+      component.root
+        .findByProps({testID: 'email'})
+        .props.onChangeText('carlos@example.com');
+
+      component.root
+        .findByProps({testID: 'password'})
+        .props.onChangeText('secret123');
+    });
+
+    await act(async () => {
+      component.root.findByProps({testID: 'login-button'}).props.onPress();
+    });
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      'Error de autenticación',
+      'Credenciales inválidas',
+    );
+
+    alertSpy.mockRestore();
+
+    act(() => {
+      component.unmount();
+    });
+  });
+});

@@ -3,7 +3,7 @@
     {
       "id": "hu6-login-recolector-app",
       "title": "HU-6 Login Recolector (AppRecicler)",
-      "testPathPattern": "__tests__/App.test.tsx",
+      "testPathPattern": "__tests__/login/LoginView.test.tsx",
       "sprint": 1,
       "enabled": true
     },
